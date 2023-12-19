@@ -32,16 +32,31 @@ public class MyKeyboard {
         Button but1;
         System.out.println(obj);
         if(obj != null && obj.get("0").toString().length() > 0) {
-            but0 = new TextButton(Button.Color.PRIMARY, new TextButton.Action(
-                    obj.get("0").toString(),
-                    new JsonObject()));
-            list.add(but0);
+            JSONObject obj1 = (JSONObject) obj.get("0");
+            if(obj1.get("color") != null && obj1.get("text") != null
+                    && obj1.get("color").toString().length() > 0
+                    && obj1.get("text").toString().length() > 0) {
+                but0 = new TextButton(Arrays.stream(Button.Color.values())
+                        .filter(elem -> elem.toString().equals(obj1.get("color").toString()))
+                        .toList().get(0),
+                        new TextButton.Action(obj1.get("text").toString(),
+                                new JsonObject()));
+                list.add(but0);
+            }
         }
         if(obj != null && obj.get("1").toString().length() > 0) {
-            but1 = new TextButton(Button.Color.PRIMARY, new TextButton.Action(
-                    obj.get("1").toString(),
-                    new JsonObject()));
-            list.add(but1);
+            JSONObject obj1 = (JSONObject) obj.get("1");
+            if(obj1.get("color") != null && obj1.get("text") != null
+                    && obj1.get("color").toString().length() > 0
+                    && obj1.get("text").toString().length() > 0) {
+                but1 = new TextButton(Arrays.stream(Button.Color.values())
+                        .filter(elem -> elem.toString().equals(obj1.get("color").toString()))
+                        .toList().get(0),
+                        new TextButton.Action(
+                                obj1.get("text").toString(),
+                                new JsonObject()));
+                list.add(but1);
+            }
         }
         return list;
     }
