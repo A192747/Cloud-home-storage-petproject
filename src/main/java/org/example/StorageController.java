@@ -12,6 +12,7 @@ import org.example.utils.Listener;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -26,6 +27,7 @@ public class StorageController {
     public static StorageStatus status;
     public static ListStatus listStatus;
     private static ResourcesArgs.Builder build;
+    public static List<Resource> info;
 
     private StorageController(){}
 
@@ -36,6 +38,7 @@ public class StorageController {
         listStatus = ListStatus.NONE;
         build = new ResourcesArgs.Builder();
         build.setPath("/");
+        info = new ArrayList<>();
     }
     public static void createSubdirectories(String path) {
         System.out.println(mainPath + path.substring(0, path.lastIndexOf("/")));
@@ -43,6 +46,12 @@ public class StorageController {
         if (!dir.exists()) {
             dir.mkdirs();
         }
+    }
+    public static long getYandexFreeStorageSize() throws ServerIOException, IOException {
+        return restClient.getDiskInfo().getTotalSpace();
+    }
+    public static long getYandexUsedStorageSize() throws ServerIOException, IOException {
+        return restClient.getDiskInfo().getUsedSpace();
     }
     public static void saveFromYandex() throws ServerException, IOException {
         String path;

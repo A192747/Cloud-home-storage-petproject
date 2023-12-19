@@ -10,6 +10,7 @@ import org.example.threads.Supervisor;
 import org.example.status.BotStatus;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class Bot extends LongPollBot {
@@ -48,9 +49,16 @@ public class Bot extends LongPollBot {
                                     StorageController.deleteFromYandex();
                                     status = BotStatus.MAIN;
                                     sendMessage("Яндекс диск отчищен");
+                                    StorageController.info = new ArrayList<>();
+                                    Main.mutexWaitAnswer.notify();
+                                }
+                                case "Обновить" -> {
+                                    StorageController.info = new ArrayList<>();
+                                    status = BotStatus.MAIN;
                                     Main.mutexWaitAnswer.notify();
                                 }
                                 case "Отмена" -> {
+                                    StorageController.info = StorageController.needDownloadFiles;
                                     StorageController.needDownloadFiles = null;
                                     status = BotStatus.MAIN;
                                     sendMessage("Отмена");

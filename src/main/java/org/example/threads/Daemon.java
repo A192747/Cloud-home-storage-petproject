@@ -10,22 +10,22 @@ import java.util.List;
 public class Daemon implements Runnable{
     private static final Object mutex = Main.mutex;
     private static final int delay = Integer.parseInt(Main.properties.getProperty("update_delay"));
-    private static List<Resource> info;
+
 
     @Override
     public void run() {
         try {
             System.out.println("Daemon is working");
-            info = new ArrayList<>();
+
 //            info = StorageController.getDiskInfo();
 //            StorageController.prev = info;
 //            StorageController.inTrash = StorageController.getInTrash();
             while(true){
                 synchronized (mutex) {
-                    if (!StorageController.getDiskInfo().toString().equals(info.toString())){
+                    if (!StorageController.getDiskInfo().toString().equals(StorageController.info.toString())){
                         System.out.println("Я сработал демон");
                         System.out.println(StorageController.getDiskInfo());
-                        System.out.println(info);
+                        System.out.println(StorageController.info);
                         System.out.println("*************************");
                         mutex.notify();
                     }

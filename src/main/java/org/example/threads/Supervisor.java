@@ -47,7 +47,9 @@ public class Supervisor implements Runnable {
                     Bot.status = BotStatus.SAVE_QUESTION;
                     Vk.messages.send()
                             .setPeerId(Integer.parseInt(properties.getProperty("user_vk_id")))
-                            .setMessage("На диске " + answer + "\n" + str)
+                            .setMessage("Свободного места на я.диске: " + StorageController.getYandexFreeStorageSize() / Math.pow(1024, 3) + "гб" +
+                                    "\nЗанято места на я.диске около: " + Math.round((StorageController.getYandexUsedStorageSize() / Math.pow(1024, 2))) + "мб" +
+                                    "\nНовые файлы на диске " + answer + "\n" + str)
                             .setKeyboard(MyKeyboard.getKeyboard(Bot.status))
                             .execute();
                     synchronized (mutexWaitAnswer){
