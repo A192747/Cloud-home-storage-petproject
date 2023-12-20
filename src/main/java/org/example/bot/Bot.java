@@ -2,15 +2,22 @@ package org.example.bot;
 
 import api.longpoll.bots.LongPollBot;
 import api.longpoll.bots.exceptions.VkApiException;
+import api.longpoll.bots.methods.VkBotsMethods;
 import api.longpoll.bots.model.events.messages.MessageNew;
+import com.google.gson.JsonObject;
 import com.yandex.disk.rest.exceptions.ServerException;
+import com.yandex.disk.rest.exceptions.ServerIOException;
 import org.example.Main;
 import org.example.StorageController;
 import org.example.threads.Supervisor;
 import org.example.status.BotStatus;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 public class Bot extends LongPollBot {
@@ -30,49 +37,123 @@ public class Bot extends LongPollBot {
                 .setKeyboard(MyKeyboard.getKeyboard(status))
                 .execute();
     }
+    private void getAllStorageInfo() throws VkApiException, ServerIOException, IOException {
+        sendMessage(StorageController.getAllStorageInfo());
+    }
+    private void invokeMethod(String name) throws VkApiException, ServerIOException, IOException {
+        switch (name) {
+            case "getAllStorageInfo" -> {
+                StorageController.info = new ArrayList<>();
+                getAllStorageInfo();
+            }
+            case "controlYandexAutoCleanUpTrash" -> {
+                StorageController.controlYandexAutoCleanUpTrash();
+                sendMessage("Авто очищение корзины после загрузки файлов " + (StorageController.getAutoCleanUpValue()
+                        ? "включено" : "отключено"));
+            }
+            case "deleteFromYandexTrash" -> {
+                new Thread(() -> {
+                    try {
+                        StorageController.deleteFromYandexTrash();
+                        sendMessage("Корзина очищена");
+                    } catch (Exception e) {
+                        System.out.println("Не удалось очистить корзину");
+                        throw new RuntimeException(e);
+                    }
+                }).start();
+
+            }
+
+        }
+    }
+
+    private void handle(JsonObject obj) throws InvocationTargetException, IllegalAccessException, VkApiException, ServerIOException, IOException {
+        if(obj == null){
+            sendMessage("Я вас не понял");
+            return;
+        }
+        if(obj.has("function_name")) {
+            String name = obj.get("function_name").getAsString();
+            invokeMethod(name);
+            return;
+        }
+        if(obj.has("next_status")) {
+            String nextStatus = obj.get("next_status").getAsString();
+            status = Arrays.stream(BotStatus.values())
+                    .filter(elem -> elem.toString().equals(nextStatus))
+                    .toList().get(0);
+        }
+        if(obj.has("answer")) {
+            sendMessage(obj.get("answer").getAsString());
+        }
+    }
     @Override
     public void onMessageNew(MessageNew messageNew) {
         if (messageNew.getMessage().getFromId() == user_id) {
             try {
                 String text = messageNew.getMessage().getText();
+                JsonObject obj;
+                if(messageNew.getMessage().getPayload() != null)
+                    obj = messageNew.getMessage().getPayload().getAsJsonObject();
+                else
+                    obj = null;
                 switch (status) {
-                    case MAIN -> {
+                    case MAIN, SETTINGS ->
+                        handle(obj);
 
+                    case SELECT_A_FILE -> {
+                        //Надо добавить
                     }
                     case SAVE_QUESTION -> {
                         synchronized (Main.mutexWaitAnswer) {
-                            switch (text) {
-                                case "Сохранить" -> {
-                                    sendMessage("Загрузка началась");
-                                    StorageController.saveFromYandex();
-                                    sendMessage("Файлы загружены");
-                                    StorageController.deleteFromYandex();
-                                    status = BotStatus.MAIN;
-                                    sendMessage("Яндекс диск отчищен");
-                                    StorageController.info = new ArrayList<>();
-                                    Main.mutexWaitAnswer.notify();
+                            if (obj.has("key")) {
+                                switch (obj.get("key").getAsString()) {
+                                    case "save" -> {
+//                                        new Thread(() ->{
+//                                            try {
+                                        sendMessage("Загрузка началась");
+                                        StorageController.saveFromYandex();
+
+                                        status = BotStatus.MAIN;
+                                        sendMessage("Файлы загружены");
+                                        StorageController.deleteFromYandex();
+                                        if(StorageController.getAutoCleanUpValue()) {
+                                            sendMessage("Яндекс диск очищен");
+                                        }
+
+                                        StorageController.info = new ArrayList<>();
+                                        Thread.sleep(500);
+                                        Main.mutexWaitAnswer.notify();
+//                                            }catch (ServerException | VkApiException | IOException | InterruptedException e) {
+//                                                throw new RuntimeException(e);
+//                                            }
+//                                        }).start();
+
+                                    }
+                                    case "update" -> {
+                                        StorageController.info = new ArrayList<>();
+                                        status = BotStatus.MAIN;
+                                        Thread.sleep(500);
+                                        Main.mutexWaitAnswer.notify();
+                                    }
+                                    case "cansel" -> {
+                                        StorageController.info = StorageController.needDownloadFiles;
+                                        //StorageController.needDownloadFiles = null;
+                                        status = BotStatus.MAIN;
+                                        sendMessage("Отмена");
+                                        Thread.sleep(500);
+                                        Main.mutexWaitAnswer.notify();
+                                    }
                                 }
-                                case "Обновить" -> {
-                                    StorageController.info = new ArrayList<>();
-                                    status = BotStatus.MAIN;
-                                    Main.mutexWaitAnswer.notify();
-                                }
-                                case "Отмена" -> {
-                                    StorageController.info = StorageController.needDownloadFiles;
-                                    StorageController.needDownloadFiles = null;
-                                    status = BotStatus.MAIN;
-                                    sendMessage("Отмена");
-                                    Main.mutexWaitAnswer.notify();
-                                }
-                                default -> {
-                                    sendMessage("Я вас не понял");
-                                }
+                            } else {
+                                sendMessage("Я вас не понял");
                             }
                         }
                     }
                 }
 
-            } catch(VkApiException | ServerException | IOException e){
+            } catch(VkApiException | ServerException | IOException | InvocationTargetException |
+                    IllegalAccessException | InterruptedException e){
                 e.printStackTrace();
             }
         }

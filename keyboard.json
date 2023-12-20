@@ -3,8 +3,9 @@
     "MAIN": {
       "0Line": {
         "0": {
-          "text": "Загрузить на яндекс диск",
-          "color": "POSITIVE"
+          "text": "Инфо",
+          "color": "PRIMARY",
+          "function_name": "getAllStorageInfo"
         },
         "1": {
           "text": "",
@@ -13,8 +14,10 @@
       },
       "1Line": { 
         "0": {
-          "text": "Удалить из лок. хранилища",
-          "color": "PRIMARY"
+          "text": "Выбрать файлы",
+          "color": "POSITIVE",
+          "answer": "Перейдите по нужному пути и выберите необходимые для вас файлы/папки",
+          "next_status": "SELECT_A_FILE"
         },
         "1": {
           "text": "",
@@ -23,12 +26,14 @@
       },
       "2Line": {
         "0": {
-          "text": "Инфо",
-          "color": "SECONDARY"
+          "text": "",
+          "color": ""
         },
         "1": {
           "text": "Настройки",
-          "color": "NEGATIVE"
+          "color": "NEGATIVE",
+          "answer": "Перехожу в настройки",
+          "next_status": "SETTINGS"
         }
       }
     }
@@ -38,7 +43,9 @@
       "0Line": {
         "0": {
           "text": "Сохранить",
-          "color": "POSITIVE"
+          "color": "POSITIVE",
+          "key": "save",
+          "next_status": "MAIN"
         },
         "1": {
           "text": "",
@@ -48,7 +55,9 @@
       "1Line": {
         "0": {
           "text": "Обновить",
-          "color": "PRIMARY"
+          "color": "PRIMARY",
+          "key": "update",
+          "next_status": "SAVE_QUESTION"
         },
         "1": {
           "text": "",
@@ -58,7 +67,9 @@
       "2Line": {
         "0": {
           "text": "Отмена",
-          "color": "NEGATIVE"
+          "color": "NEGATIVE",
+          "key": "cansel",
+          "next_status": "MAIN"
         },
         "1": {
           "text": "",
@@ -72,7 +83,8 @@
       "0Line": {
         "0": {
           "text": "On/Off авто очищение корзины",
-          "color": "SECONDARY"
+          "color": "SECONDARY",
+          "function_name": "controlYandexAutoCleanUpTrash"
         },
         "1": {
           "text": "",
@@ -81,8 +93,9 @@
       },
       "1Line": {
         "0": {
-          "text": "Назад",
-          "color": "PRIMARY"
+          "text": "Отчистить корзину",
+          "color": "SECONDARY",
+          "function_name": "deleteFromYandexTrash"
         },
         "1": {
           "text": "",
@@ -91,14 +104,19 @@
       },
       "2Line": {
         "0": {
-          "text": "",
-          "color": ""
+          "text": "Назад",
+          "color": "PRIMARY",
+          "next_status": "MAIN",
+          "answer": "Назад"
         },
         "1": {
           "text": "",
           "color": ""
         }
       }
+    },
+    "SELECT_A_FILE": {
+
     }
   }
 ]
