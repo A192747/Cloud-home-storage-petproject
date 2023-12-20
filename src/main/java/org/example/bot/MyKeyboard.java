@@ -26,6 +26,7 @@ public class MyKeyboard {
     public static Keyboard getKeyboard(BotStatus status) {
         return keys.get(status);
     }
+
     private static List<Button> getButtons(JSONObject obj){
         List<Button> list = new ArrayList<>();
         Button but0;

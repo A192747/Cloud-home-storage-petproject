@@ -16,8 +16,7 @@
         "0": {
           "text": "Выбрать файлы",
           "color": "POSITIVE",
-          "answer": "Перейдите по нужному пути и выберите необходимые для вас файлы/папки",
-          "next_status": "SELECT_A_FILE"
+          "function_name": "getPathImage"
         },
         "1": {
           "text": "",

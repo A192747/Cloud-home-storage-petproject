@@ -11,6 +11,7 @@ import org.example.Main;
 import org.example.StorageController;
 import org.example.threads.Supervisor;
 import org.example.status.BotStatus;
+import org.example.utils.PathToImage;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -37,6 +38,14 @@ public class Bot extends LongPollBot {
                 .setKeyboard(MyKeyboard.getKeyboard(status))
                 .execute();
     }
+    private void sendMessage(String str, File photo) throws VkApiException {
+        vk.messages.send()
+                .setMessage(str)
+                .setPeerId(user_id)
+                .setKeyboard(MyKeyboard.getKeyboard(status))
+                .addPhoto(photo)
+                .execute();
+    }
     private void getAllStorageInfo() throws VkApiException, ServerIOException, IOException {
         sendMessage(StorageController.getAllStorageInfo());
     }
@@ -61,7 +70,12 @@ public class Bot extends LongPollBot {
                         throw new RuntimeException(e);
                     }
                 }).start();
-
+            }
+            case "getPathImage" -> {
+                status = BotStatus.SELECT_A_FILE;
+                sendMessage("Напишите название папок или файлов, которые хотите загрузить на я.диск\n" +
+                                "*Удобнее загружать папку целиком на диск*",
+                        PathToImage.getPathImage());
             }
 
         }
@@ -100,7 +114,6 @@ public class Bot extends LongPollBot {
                 switch (status) {
                     case MAIN, SETTINGS ->
                         handle(obj);
-
                     case SELECT_A_FILE -> {
                         //Надо добавить
                     }
