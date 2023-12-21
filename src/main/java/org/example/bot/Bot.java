@@ -2,7 +2,6 @@ package org.example.bot;
 
 import api.longpoll.bots.LongPollBot;
 import api.longpoll.bots.exceptions.VkApiException;
-import api.longpoll.bots.methods.VkBotsMethods;
 import api.longpoll.bots.model.events.messages.MessageNew;
 import com.google.gson.JsonObject;
 import com.yandex.disk.rest.exceptions.ServerException;
@@ -10,12 +9,10 @@ import com.yandex.disk.rest.exceptions.ServerIOException;
 import org.example.Main;
 import org.example.StorageController;
 import org.example.threads.Supervisor;
-import org.example.status.BotStatus;
 import org.example.utils.PathToImage;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,7 +72,17 @@ public class Bot extends LongPollBot {
                 status = BotStatus.SELECT_A_FILE;
                 sendMessage("Напишите название папок или файлов, которые хотите загрузить на я.диск\n" +
                                 "*Удобнее загружать папку целиком на диск*",
-                        PathToImage.getPathImage());
+                        PathToImage.getPathImage(false));
+            }
+            case "getPathForDirsImage" -> {
+                status = BotStatus.SELECT_DIR;
+                sendMessage("Напишите название папки, чтобы файлы из я.диска сохранились именно в неё",
+                        PathToImage.getPathImage(true));
+            }
+            case "setDefaultPath" -> {
+                status = BotStatus.MAIN;
+                StorageController.chosenPath = "";
+                sendMessage("Путь сохранения файлов сброшен на стандартный: /");
             }
 
         }
@@ -101,6 +108,17 @@ public class Bot extends LongPollBot {
             sendMessage(obj.get("answer").getAsString());
         }
     }
+
+    public static boolean isNumeric(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private static List<String> paths = new ArrayList<>();
     @Override
     public void onMessageNew(MessageNew messageNew) {
         if (messageNew.getMessage().getFromId() == user_id) {
@@ -115,7 +133,64 @@ public class Bot extends LongPollBot {
                     case MAIN, SETTINGS ->
                         handle(obj);
                     case SELECT_A_FILE -> {
-                        //Надо добавить
+                        if (obj != null) {
+                            handle(obj);
+                            return;
+                        }
+
+                        System.out.println(text);
+                    }
+                    case SELECT_DIR -> {
+                        if (obj != null) {
+                            handle(obj);
+                            return;
+                        }
+                        List<String> list = StorageController.findSimilarPath(text);
+                        StringBuilder answer = new StringBuilder("");
+                        if(list.size() > 1) {
+                            answer.append("Нашлось несколько вариантов. Напишите цифру необходимого вам пути:\n");
+                            status = BotStatus.SELECT_DIR_NUMBER;
+                        } else {
+                            if (list.isEmpty()) {
+                                answer.append("Папки с таким названием не существует!\n");
+                                sendMessage(answer.toString());
+                                invokeMethod("getPathForDirsImage");
+                                return;
+                            } else {
+                                answer.append("Нашелся подходящий вариант:\n");
+                                status = BotStatus.MAIN;
+                            }
+                        }
+                        int counter = 0;
+                        paths = list;
+                        for (String path : list) {
+                            counter++;
+                            if(list.size() == 1)
+                                answer.append(path + "\n");
+                            else
+                                answer.append(counter + " " + path + "\n");
+                        }
+                        if(paths.size() == 1) {
+                            StorageController.chosenPath = paths.get(0);
+                            answer.append("Папка выбрана. Можете загружать файлы на яндекс диск");
+                        }
+                        sendMessage(answer.toString());
+
+                    }
+                    case SELECT_DIR_NUMBER -> {
+                        if (obj != null) {
+                            handle(obj);
+                            return;
+                        }
+                        if(isNumeric(text)
+                                && 0 < Integer.valueOf(text)
+                                && Integer.valueOf(text) <= paths.size()) {
+                            StorageController.chosenPath = paths.get(Integer.valueOf(text) - 1);
+                            status = BotStatus.MAIN;
+                            sendMessage("Папка выбрана. Можете загружать файлы на яндекс диск");
+                        } else {
+                            sendMessage("Введите число в пределах от 1 до " + paths.size());
+                        }
                     }
                     case SAVE_QUESTION -> {
                         synchronized (Main.mutexWaitAnswer) {

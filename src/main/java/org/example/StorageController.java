@@ -1,17 +1,12 @@
 package org.example;
 
 import api.longpoll.bots.exceptions.VkApiException;
-import api.longpoll.bots.methods.VkBotsMethods;
 import com.yandex.disk.rest.Credentials;
 import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.ServerException;
 import com.yandex.disk.rest.exceptions.ServerIOException;
 import com.yandex.disk.rest.json.Resource;
-import org.example.bot.MyKeyboard;
-import org.example.status.BotStatus;
-import org.example.status.ListStatus;
-import org.example.status.StorageStatus;
 import org.example.utils.Listener;
 
 import java.io.File;
@@ -28,18 +23,16 @@ public class StorageController {
     private static RestClient restClient;
     private static String mainPath = properties.getProperty("location_to_sync");
 
-    public static StorageStatus status;
-    public static ListStatus listStatus;
     private static ResourcesArgs.Builder build;
     public static List<Resource> info;
+
+    public static String chosenPath = "";
 
     private StorageController(){}
 
     public static void init(){
         Credentials credentials = new Credentials("fedor", properties.getProperty("yandex_token"));
         restClient = new RestClient(credentials);
-        status = StorageStatus.NONE;
-        listStatus = ListStatus.NONE;
         build = new ResourcesArgs.Builder();
         build.setPath("/");
         info = new ArrayList<>();
@@ -61,7 +54,8 @@ public class StorageController {
     public static String getAllStorageInfo() throws ServerIOException, IOException, VkApiException {
         return "Занятого места на я.диске около: " + Math.round(getYandexUsedStorageSize() / Math.pow(1024, 2))+ "мб\n"
                 + "Свободного места на я.диске около: " + getYandexFreeStorageSize() / Math.pow(1024, 3) + "гб\n"
-                + "Авто очистка корзины после загрузки файлов на лок. хранилище: " + (StorageController.getAutoCleanUpValue() ? "включено" : "отключено");
+                + "Авто очистка корзины после загрузки файлов на лок. хранилище: " + ((StorageController.getAutoCleanUpValue() ? "включено" : "отключено") + "\n"
+                + "Выбранный путь для сохранения файлов: " + (chosenPath.length() == 0 ? "/" : chosenPath));
     }
     public static void saveFromYandex() throws ServerException, IOException {
         String path;
@@ -72,19 +66,19 @@ public class StorageController {
                 createSubdirectories(path);
             saveFileFromYandex(path);
         }
+        chosenPath = "";
     }
     private static void saveFileFromYandex(String path) throws ServerException, IOException {
         File file = new File(mainPath + path);
         if (file.exists())
             file.delete();
+        System.out.println(mainPath + path);
         restClient.downloadFile(path,
-                new File(mainPath + path),
+                new File(mainPath + chosenPath+ path),
                 listener);
     }
     public static void deleteFromYandex() throws ServerIOException, IOException {
         deleteFromYandexMain();
-        //можно вынести как отдельную функцию по очищению корзины, если выключена авто очистка
-        //deleteFromYandexTrash();
     }
     private static void deleteFromYandexMain() throws ServerIOException, IOException {
         String path;
@@ -118,6 +112,32 @@ public class StorageController {
     }
     public static List<Resource> getDiskInfo() throws ServerIOException, IOException {
         return restClient.getLastUploadedResources(build.build()).getItems();
+    }
+
+    public static List<String> findSimilarPath(String name) {
+        List<String> list = new ArrayList<>();
+        List<String> result = new ArrayList<>();
+        File directory = new File(mainPath);
+        if (directory.isDirectory()) {
+            getFoldersList(directory, list, mainPath);
+            for (String folder : list) {
+                folder = folder.substring(mainPath.length(), folder.length());
+                if(folder.contains(name))
+                    result.add(folder);
+            }
+        }
+        return result;
+
+    }
+    private static void getFoldersList(File directory, List<String> folders, String path) {
+        File[] files = directory.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                String folderPath = path + file.getName() + "/";
+                folders.add(folderPath);
+                getFoldersList(file, folders, folderPath);
+            }
+        }
     }
 
 }

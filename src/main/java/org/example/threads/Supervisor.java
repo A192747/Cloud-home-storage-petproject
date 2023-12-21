@@ -8,7 +8,7 @@ import org.example.Main;
 import org.example.bot.Bot;
 import org.example.StorageController;
 import org.example.bot.MyKeyboard;
-import org.example.status.BotStatus;
+import org.example.bot.BotStatus;
 
 import java.io.IOException;
 import java.util.List;

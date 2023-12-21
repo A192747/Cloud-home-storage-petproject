@@ -1,6 +1,6 @@
-yandex_token=
-vk_token=
+yandex_token=ytrewq
+vk_token=qwerty
 user_vk_id=123456
 location_to_sync=C:\\Users\\P\\Desktop\\YandexDiskLoader\\src\\main\\resources\\
 location_keyboard_json=keyboard.json
-update_delay=1000
+update_delay=5000

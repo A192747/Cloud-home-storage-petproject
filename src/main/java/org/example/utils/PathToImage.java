@@ -16,7 +16,9 @@ import java.util.Properties;
 import java.util.Stack;
 
 public class PathToImage {
-    public static File getPathImage()  {
+    public static File getPathImage(boolean onlyDirs)  {
+        wight = 0;
+        height = 0;
         String path = Main.properties.getProperty("location_to_sync").toString();
         File directory = new File(path);
         if (directory.isDirectory()) {
@@ -26,7 +28,7 @@ public class PathToImage {
             g.fillRect(0, 0, image.getWidth(), image.getHeight());
             g.setFont(new Font("Arial", Font.PLAIN, 20));
             g.drawString(directory.getName(), 20, 20);
-            printRecursiveTree(directory, 40, 0, g);
+            printRecursiveTree(directory, 40, 0, g, onlyDirs);
             g.dispose();
             BufferedImage croppedImage = image.getSubimage(0, 20, wight, height); // Обрезаем изображение по заданным размерам
             try {
@@ -45,14 +47,15 @@ public class PathToImage {
     private static String dirStr = "\\---";
     private static String fileStr = "|---";
     private static String tempName = "";
-    private static int printRecursiveTree(File directory, int y, int level, Graphics g) {
+
+    private static int printRecursiveTree(File directory, int y, int level, Graphics g, boolean onlyDirs) {
         File[] files = directory.listFiles();
         List<File> sortedList = new ArrayList<>();
         List<File> listOfDirs = new ArrayList<>();
         for(File file : files){
             if(file.isDirectory())
                 listOfDirs.add(file);
-            if(file.isFile())
+            if(file.isFile() && !onlyDirs)
                 sortedList.add(file);
         }
         for (File file : listOfDirs){
@@ -62,19 +65,18 @@ public class PathToImage {
             int x =  level * 50;
             y += 20;
             if (file.isDirectory()) {
-                g.setColor(Color.DARK_GRAY); // Устанавливаем синий цвет для папок
+                g.setColor(Color.DARK_GRAY); // Устанавливаем цвет для папок
             } else {
-                g.setColor(Color.GRAY); // Устанавливаем зеленый цвет для файлов
+                g.setColor(Color.GRAY); // Устанавливаем цвет для файлов
             }
             if (file.isDirectory())
                 tempName = dirStr + file.getName();
             else
                 tempName = fileStr + file.getName();
-
-            wight = Math.max((tempName).length() * 12, wight);
+            wight = Math.max((tempName).length() * 12 + x, wight);
             g.drawString(tempName, x, y);
             if (file.isDirectory()) {
-                y = printRecursiveTree(file, y, level + 1, g);
+                y = printRecursiveTree(file, y, level + 1, g, onlyDirs);
             }
             height = Math.max(height, y);
         }

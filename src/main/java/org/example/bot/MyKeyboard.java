@@ -3,7 +3,6 @@ package org.example.bot;
 import api.longpoll.bots.model.objects.additional.Keyboard;
 import api.longpoll.bots.model.objects.additional.buttons.*;
 import com.google.gson.JsonObject;
-import org.example.status.BotStatus;
 import org.example.utils.JsonWorker;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

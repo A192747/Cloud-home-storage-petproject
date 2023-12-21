@@ -3,18 +3,7 @@
     "MAIN": {
       "0Line": {
         "0": {
-          "text": "Инфо",
-          "color": "PRIMARY",
-          "function_name": "getAllStorageInfo"
-        },
-        "1": {
-          "text": "",
-          "color": ""
-        }
-      },
-      "1Line": { 
-        "0": {
-          "text": "Выбрать файлы",
+          "text": "Выбрать файлы для загрузки",
           "color": "POSITIVE",
           "function_name": "getPathImage"
         },
@@ -23,10 +12,22 @@
           "color": ""
         }
       },
-      "2Line": {
+      "1Line": { 
         "0": {
+          "text": "Выбрать папку для сохранения на пк",
+          "color": "POSITIVE",
+          "function_name": "getPathForDirsImage"
+        },
+        "1": {
           "text": "",
           "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "Инфо",
+          "color": "PRIMARY",
+          "function_name": "getAllStorageInfo"
         },
         "1": {
           "text": "Настройки",
@@ -113,9 +114,114 @@
           "color": ""
         }
       }
-    },
+    }
+  },
+  {
     "SELECT_A_FILE": {
-
+      "0Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "next_status": "MAIN",
+          "answer": "Назад"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SELECT_DIR" : {
+      "0Line": {
+        "0": {
+          "text": "Сбросить путь",
+          "color": "SECONDARY",
+          "function_name": "setDefaultPath"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "next_status": "MAIN",
+          "answer": "Назад"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SELECT_DIR_NUMBER": {
+      "0Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "function_name": "getPathForDirsImage"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
     }
   }
 ]
