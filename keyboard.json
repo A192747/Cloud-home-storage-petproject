@@ -3,7 +3,7 @@
     "MAIN": {
       "0Line": {
         "0": {
-          "text": "Выбрать файлы для загрузки",
+          "text": "Выбрать файлы",
           "color": "POSITIVE",
           "function_name": "getPathImage"
         },
@@ -15,7 +15,7 @@
       "1Line": { 
         "0": {
           "text": "Выбрать папку для сохранения на пк",
-          "color": "POSITIVE",
+          "color": "PRIMARY",
           "function_name": "getPathForDirsImage"
         },
         "1": {
@@ -26,7 +26,7 @@
       "2Line": {
         "0": {
           "text": "Инфо",
-          "color": "PRIMARY",
+          "color": "SECONDARY",
           "function_name": "getAllStorageInfo"
         },
         "1": {
