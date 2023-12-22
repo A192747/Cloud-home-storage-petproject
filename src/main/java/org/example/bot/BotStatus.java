@@ -6,6 +6,7 @@ public enum BotStatus {
     SELECT_A_FILE,
     SELECT_DIR,
     SELECT_DIR_NUMBER,
+    SELECT_FILES_NUMBER,
     MAIN
 
 }

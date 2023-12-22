@@ -223,5 +223,40 @@
         }
       }
     }
+  },
+  {
+    "SELECT_FILES_NUMBER": {
+      "0Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "function_name": "getPathImage"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
   }
 ]

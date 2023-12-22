@@ -13,10 +13,7 @@ import org.example.utils.PathToImage;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class Bot extends LongPollBot {
 
@@ -119,6 +116,7 @@ public class Bot extends LongPollBot {
     }
 
     private static List<String> paths = new ArrayList<>();
+    private static List<String> filesPaths;
     @Override
     public void onMessageNew(MessageNew messageNew) {
         if (messageNew.getMessage().getFromId() == user_id) {
@@ -137,8 +135,60 @@ public class Bot extends LongPollBot {
                             handle(obj);
                             return;
                         }
-
-                        System.out.println(text);
+                        List<String> list = StorageController.findSimilarFiles(text);
+                        System.out.println(list);
+                        StringBuilder answer = new StringBuilder("");
+                        if(list.size() > 1) {
+                            answer.append("Нашлось несколько вариантов. Напишите цифры необходимых вам файлов/папок:\n");
+                            status = BotStatus.SELECT_FILES_NUMBER;
+                        } else {
+                            if (list.isEmpty()) {
+                                answer.append("Файлов или папки с таким названием не существует!\n");
+                                sendMessage(answer.toString());
+                                invokeMethod("getPathImage");
+                                return;
+                            } else {
+                                answer.append("Нашелся подходящий вариант:\n");
+                                status = BotStatus.MAIN;
+                            }
+                        }
+                        int counter = 0;
+                        filesPaths = list;
+                        for (String path : list) {
+                            counter++;
+                            if(list.size() == 1)
+                                answer.append(path + "\n");
+                            else
+                                answer.append(counter + " " + path + "\n");
+                        }
+                        if(filesPaths.size() == 1) {
+                            StorageController.uploadPaths = filesPaths;
+                            answer.append("Файл выбран");
+                        }
+                        sendMessage(answer.toString());
+                    }
+                    case SELECT_FILES_NUMBER -> {
+                        if (obj != null) {
+                            handle(obj);
+                            return;
+                        }
+                        String[] numbers = text.split(", ");
+                        for (String num : numbers){
+                            if (isNumeric(num)
+                                    && 0 < Integer.valueOf(num)
+                                    && Integer.valueOf(num) <= filesPaths.size()) {
+                                StorageController.uploadPaths.add(filesPaths.get(Integer.valueOf(num) - 1));
+                            } else {
+                                sendMessage("Введите число в пределах от 1 до " + paths.size());
+                                return;
+                            }
+                        }
+                        status = BotStatus.MAIN;
+                        StringBuilder paths = new StringBuilder("");
+                        for (String str : filesPaths) {
+                            paths.append(str).append("\n");
+                        }
+                        sendMessage("Выбраны следующие файлы: \n" + paths);
                     }
                     case SELECT_DIR -> {
                         if (obj != null) {

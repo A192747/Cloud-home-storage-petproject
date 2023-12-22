@@ -6,6 +6,7 @@ import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.ServerException;
 import com.yandex.disk.rest.exceptions.ServerIOException;
+import com.yandex.disk.rest.exceptions.WrongMethodException;
 import com.yandex.disk.rest.json.Resource;
 import org.example.utils.Listener;
 
@@ -114,6 +115,33 @@ public class StorageController {
         return restClient.getLastUploadedResources(build.build()).getItems();
     }
 
+    public static List<String> findSimilarFiles(String name) {
+        List<String> list = new ArrayList<>();
+        List<String> result = new ArrayList<>();
+        File directory = new File(mainPath);
+        if (directory.isDirectory()) {
+            getFilesAndFoldersList(directory, list, mainPath);
+            for (String file : list) {
+                file = file.substring(mainPath.length(), file.length());
+                if(file.contains(name))
+                    result.add(file);
+            }
+        }
+        return result;
+
+    }
+    private static void getFilesAndFoldersList(File directory, List<String> filesAndFolders, String basePath) {
+        File[] files = directory.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                filesAndFolders.add(file.getAbsolutePath());
+                getFilesAndFoldersList(file, filesAndFolders, basePath);
+            } else {
+                filesAndFolders.add(file.getAbsolutePath());
+            }
+        }
+    }
+
     public static List<String> findSimilarPath(String name) {
         List<String> list = new ArrayList<>();
         List<String> result = new ArrayList<>();
@@ -139,5 +167,19 @@ public class StorageController {
             }
         }
     }
+    public static List<String> uploadPaths;
+    public static void uploadFilesToYandex() throws ServerException, IOException {
+        for (String path: uploadPaths) {
+            uploadFile(path);
+        }
+        uploadPaths = null;
+    }
+    private static void uploadFile(String path) throws ServerException, IOException {
+        restClient.uploadFile(restClient.getUploadLink(path, true),
+                true,
+                new File(mainPath + path.substring(path.lastIndexOf("/") + 1, path.length() - 1)),
+                listener);
+    }
+
 
 }
