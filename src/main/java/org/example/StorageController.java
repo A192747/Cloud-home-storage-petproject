@@ -70,12 +70,12 @@ public class StorageController {
         chosenPath = "";
     }
     private static void saveFileFromYandex(String path) throws ServerException, IOException {
-        File file = new File(mainPath + path);
+        File file = new File(mainPath + "\\" + chosenPath + path);
         if (file.exists())
             file.delete();
-        System.out.println(mainPath + path);
+        System.out.println(mainPath + "\\" + chosenPath + path);
         restClient.downloadFile(path,
-                new File(mainPath + chosenPath+ path),
+                new File(mainPath + "\\"+ chosenPath + path),
                 listener);
     }
     public static void deleteFromYandex() throws ServerIOException, IOException {
@@ -115,16 +115,18 @@ public class StorageController {
         return restClient.getLastUploadedResources(build.build()).getItems();
     }
 
-    public static List<String> findSimilarFiles(String name) {
+    public static List<String> findSimilarFiles(List<String> names) {
         List<String> list = new ArrayList<>();
         List<String> result = new ArrayList<>();
         File directory = new File(mainPath);
-        if (directory.isDirectory()) {
-            getFilesAndFoldersList(directory, list, mainPath);
-            for (String file : list) {
-                file = file.substring(mainPath.length(), file.length());
-                if(file.contains(name))
-                    result.add(file);
+        for (String name: names) {
+            if (directory.isDirectory()) {
+                getFilesAndFoldersList(directory, list, mainPath);
+                for (String file : list) {
+                    file = file.substring(mainPath.length(), file.length());
+                    if (file.contains(name) && !result.contains(file))
+                        result.add(file);
+                }
             }
         }
         return result;
@@ -169,15 +171,31 @@ public class StorageController {
     }
     public static List<String> uploadPaths;
     public static void uploadFilesToYandex() throws ServerException, IOException {
+        System.out.println("111" + uploadPaths);
         for (String path: uploadPaths) {
             uploadFile(path);
         }
         uploadPaths = null;
     }
+    public static void deleteFromStorage() {
+        for (String path: uploadPaths) {
+            deleteFileFromStorage(path);
+        }
+        uploadPaths = null;
+    }
+    private static void deleteFileFromStorage(String path) {
+        File file = new File(mainPath + path);
+        if(file.exists()) {
+            //добавить удаление папок
+            file.delete();
+        }
+    }
     private static void uploadFile(String path) throws ServerException, IOException {
-        restClient.uploadFile(restClient.getUploadLink(path, true),
+        System.out.println(path);
+        //добавить загрузку папок
+        restClient.uploadFile(restClient.getUploadLink(path.substring(path.lastIndexOf("\\") + 1), true),
                 true,
-                new File(mainPath + path.substring(path.lastIndexOf("/") + 1, path.length() - 1)),
+                new File(mainPath + path.substring(path.lastIndexOf("/") + 1)),
                 listener);
     }
 

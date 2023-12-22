@@ -135,7 +135,7 @@ public class Bot extends LongPollBot {
                             handle(obj);
                             return;
                         }
-                        List<String> list = StorageController.findSimilarFiles(text);
+                        List<String> list = StorageController.findSimilarFiles(List.of(text.split(", ")));
                         System.out.println(list);
                         StringBuilder answer = new StringBuilder("");
                         if(list.size() > 1) {
@@ -149,7 +149,7 @@ public class Bot extends LongPollBot {
                                 return;
                             } else {
                                 answer.append("Нашелся подходящий вариант:\n");
-                                status = BotStatus.MAIN;
+                                status = BotStatus.WHAT_NEXT;
                             }
                         }
                         int counter = 0;
@@ -161,7 +161,7 @@ public class Bot extends LongPollBot {
                             else
                                 answer.append(counter + " " + path + "\n");
                         }
-                        if(filesPaths.size() == 1) {
+                        if (filesPaths.size() == 1) {
                             StorageController.uploadPaths = filesPaths;
                             answer.append("Файл выбран");
                         }
@@ -173,6 +173,7 @@ public class Bot extends LongPollBot {
                             return;
                         }
                         String[] numbers = text.split(", ");
+                        StorageController.uploadPaths = new ArrayList<>();
                         for (String num : numbers){
                             if (isNumeric(num)
                                     && 0 < Integer.valueOf(num)
@@ -183,12 +184,28 @@ public class Bot extends LongPollBot {
                                 return;
                             }
                         }
-                        status = BotStatus.MAIN;
+                        status = BotStatus.WHAT_NEXT;
                         StringBuilder paths = new StringBuilder("");
-                        for (String str : filesPaths) {
+                        for (String str : StorageController.uploadPaths) {
                             paths.append(str).append("\n");
                         }
                         sendMessage("Выбраны следующие файлы: \n" + paths);
+                    }
+                    case WHAT_NEXT -> {
+                        if (obj != null && !obj.has("key")) {
+                            handle(obj);
+                            return;
+                        }
+                        if (obj.has("key")) {
+                            System.out.println(obj.get("key").getAsString());
+                            switch (obj.get("key").getAsString()) {
+                                case "upload" -> StorageController.uploadFilesToYandex();
+                                case "delete" -> StorageController.deleteFromStorage();
+                                case "cansel" -> StorageController.uploadPaths = null;
+                            }
+                            status = BotStatus.MAIN;
+                            sendMessage(obj.get("answer").getAsString());
+                        }
                     }
                     case SELECT_DIR -> {
                         if (obj != null) {
@@ -292,7 +309,13 @@ public class Bot extends LongPollBot {
 
             } catch(VkApiException | ServerException | IOException | InvocationTargetException |
                     IllegalAccessException | InterruptedException e){
-                e.printStackTrace();
+                try {
+                    sendMessage("Я сломался");
+                    throw new RuntimeException(e);
+                } catch (VkApiException ex) {
+                    throw new RuntimeException(e);
+                }
+
             }
         }
     }

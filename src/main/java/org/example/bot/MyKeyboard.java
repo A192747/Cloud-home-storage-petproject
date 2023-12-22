@@ -28,9 +28,6 @@ public class MyKeyboard {
 
     private static List<Button> getButtons(JSONObject obj){
         List<Button> list = new ArrayList<>();
-        Button but0;
-        Button but1;
-        System.out.println(obj);
         addToList(obj, "0", list);
         addToList(obj, "1", list);
         return list;
