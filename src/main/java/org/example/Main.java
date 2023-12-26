@@ -15,13 +15,13 @@ public class Main {
     public static final Object mutex = new Object();
     public static final Object mutexWaitAnswer = new Object();
     public static Properties properties;
+    public static File locationToSync;
     public static void main(String[] args) {
         try {
 
             initProperties();
             JsonWorker.init();
             MyKeyboard.init();
-
 
             Bot bot = new Bot();
             //запустили супервизор
@@ -39,6 +39,7 @@ public class Main {
         properties = new Properties();
         properties.load(new FileReader(file));
         StorageController.init();
+        locationToSync = new File(properties.getProperty("location_to_sync").toString());
     }
 
 }

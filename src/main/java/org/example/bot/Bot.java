@@ -67,14 +67,35 @@ public class Bot extends LongPollBot {
             }
             case "getPathImage" -> {
                 status = BotStatus.SELECT_A_FILE;
-                sendMessage("Напишите название папок или файлов, которые хотите загрузить на я.диск\n" +
-                                "*Удобнее загружать папку целиком на диск*",
-                        PathToImage.getPathImage(false));
+                if(Main.locationToSync.isDirectory()) {
+                    if(Main.locationToSync.listFiles().length > 0) {
+                        sendMessage("Напишите название папок или файлов, которые хотите загрузить на я.диск\n" +
+                                        "*Удобнее загружать папку целиком на диск*",
+                                PathToImage.getPathImage(false));
+                    } else {
+                        status = BotStatus.MAIN;
+                        sendMessage("Нет файлов для загрузки!");
+                    }
+                } else {
+                    status = BotStatus.MAIN;
+                    sendMessage("Не возможно выбрать файлы. Проверьте правильность указанного пути!");
+                }
             }
             case "getPathForDirsImage" -> {
                 status = BotStatus.SELECT_DIR;
-                sendMessage("Напишите название папки, чтобы файлы из я.диска сохранились именно в неё",
-                        PathToImage.getPathImage(true));
+                if(Main.locationToSync.isDirectory()) {
+                    if (Main.locationToSync.listFiles().length > 0) {
+                        sendMessage("Напишите название папки, чтобы файлы из я.диска сохранились именно в неё",
+                                PathToImage.getPathImage(true));
+                    } else {
+                        status = BotStatus.MAIN;
+                        sendMessage("Так как в папке, в которую сохраняются файлы нет папок для выбора, будет использоваться" +
+                                " путь по умолчанию: /");
+                    }
+                } else {
+                    status = BotStatus.MAIN;
+                    sendMessage("Не возможно выбрать файлы. Проверьте правильность указанного пути!");
+                }
             }
             case "setDefaultPath" -> {
                 status = BotStatus.MAIN;
