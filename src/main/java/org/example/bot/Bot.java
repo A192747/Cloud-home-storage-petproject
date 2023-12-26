@@ -55,6 +55,7 @@ public class Bot extends LongPollBot {
                         ? "включено" : "отключено"));
             }
             case "deleteFromYandexTrash" -> {
+                sendMessage("Очистка корзины началась");
                 new Thread(() -> {
                     try {
                         StorageController.deleteFromYandexTrash();
@@ -195,14 +196,18 @@ public class Bot extends LongPollBot {
                         }
                         String[] numbers = text.split(", ");
                         StorageController.uploadPaths = new ArrayList<>();
-                        for (String num : numbers){
-                            if (isNumeric(num)
-                                    && 0 < Integer.valueOf(num)
-                                    && Integer.valueOf(num) <= filesPaths.size()) {
-                                StorageController.uploadPaths.add(filesPaths.get(Integer.valueOf(num) - 1));
-                            } else {
-                                sendMessage("Введите число в пределах от 1 до " + paths.size());
-                                return;
+                        if(text.equals("Все")) {
+                            StorageController.uploadPaths = filesPaths;
+                        } else {
+                            for (String num : numbers) {
+                                if (isNumeric(num)
+                                        && 0 < Integer.valueOf(num)
+                                        && Integer.valueOf(num) <= filesPaths.size()) {
+                                    StorageController.uploadPaths.add(filesPaths.get(Integer.valueOf(num) - 1));
+                                } else {
+                                    sendMessage("Введите число в пределах от 1 до " + paths.size());
+                                    return;
+                                }
                             }
                         }
                         status = BotStatus.WHAT_NEXT;
@@ -220,12 +225,32 @@ public class Bot extends LongPollBot {
                         if (obj.has("key")) {
                             System.out.println(obj.get("key").getAsString());
                             switch (obj.get("key").getAsString()) {
-                                case "upload" -> StorageController.uploadFilesToYandex();
-                                case "delete" -> StorageController.deleteFromStorage();
-                                case "cansel" -> StorageController.uploadPaths = null;
+                                case "upload" -> new Thread(() -> {
+                                    try {
+                                        String answer = obj.get("answer").getAsString();
+                                        sendMessage("Началась загрузка файлов");
+                                        StorageController.uploadFilesToYandex();
+                                        sendMessage(answer);
+                                    } catch (ServerException | IOException | VkApiException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }).start();
+                                case "delete" -> new Thread(() -> {
+                                    try {
+                                        String answer = obj.get("answer").getAsString();
+                                        sendMessage("Началось удаление файлов");
+                                        StorageController.deleteFromStorage();
+                                        sendMessage(answer);
+                                    } catch (VkApiException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }).start();
+                                case "cansel" -> {
+                                    status = BotStatus.MAIN;
+                                    StorageController.uploadPaths = null;
+                                    sendMessage(obj.get("answer").getAsString());
+                                }
                             }
-                            status = BotStatus.MAIN;
-                            sendMessage(obj.get("answer").getAsString());
                         }
                     }
                     case SELECT_DIR -> {
@@ -285,8 +310,7 @@ public class Bot extends LongPollBot {
                             if (obj.has("key")) {
                                 switch (obj.get("key").getAsString()) {
                                     case "save" -> {
-//                                        new Thread(() ->{
-//                                            try {
+
                                         sendMessage("Загрузка началась");
                                         StorageController.saveFromYandex();
 
@@ -300,10 +324,6 @@ public class Bot extends LongPollBot {
                                         StorageController.info = new ArrayList<>();
                                         Thread.sleep(500);
                                         Main.mutexWaitAnswer.notify();
-//                                            }catch (ServerException | VkApiException | IOException | InterruptedException e) {
-//                                                throw new RuntimeException(e);
-//                                            }
-//                                        }).start();
 
                                     }
                                     case "update" -> {

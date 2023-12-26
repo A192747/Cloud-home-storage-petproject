@@ -37,6 +37,7 @@ public class StorageController {
         build = new ResourcesArgs.Builder();
         build.setPath("/");
         info = new ArrayList<>();
+        allFilesOnYaDisk = new ArrayList<>();
     }
     public static void createSubdirectories(String path) {
         System.out.println(mainPath + path.substring(0, path.lastIndexOf("/")));
@@ -109,7 +110,19 @@ public class StorageController {
         }
     }
     private static void deleteFileFromYandex(String path) throws ServerIOException, IOException {
+        System.out.println("disk:" + path);
+        System.out.println(allFilesOnYaDisk);
+        for(String elem : allFilesOnYaDisk) {
+            if (elem.equals("disk:" + path))
+                allFilesOnYaDisk.remove(elem);
+        }
         restClient.delete(path, autoCleanUp);
+    }
+    public static List<String> allFilesOnYaDisk;
+    public static void addFilesInList() {
+        for(Resource elem: needDownloadFiles) {
+            allFilesOnYaDisk.add(elem.getPath().getPath());
+        }
     }
     public static List<Resource> getDiskInfo() throws ServerIOException, IOException {
         return restClient.getLastUploadedResources(build.build()).getItems();
@@ -171,7 +184,6 @@ public class StorageController {
     }
     public static List<String> uploadPaths;
     public static void uploadFilesToYandex() throws ServerException, IOException {
-        System.out.println("111" + uploadPaths);
         for (String path: uploadPaths) {
             uploadFile(path);
         }
@@ -186,17 +198,62 @@ public class StorageController {
     private static void deleteFileFromStorage(String path) {
         File file = new File(mainPath + path);
         if(file.exists()) {
-            //добавить удаление папок
-            file.delete();
+            if(file.isDirectory())
+                deleteDir(file);
+            else
+                file.delete();
         }
     }
+
+    private static void deleteDir(File dir) {
+        File[] files = dir.listFiles();
+        if(files.length > 0) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDir(file);
+                    file.delete();
+                }
+                if (file.isFile())
+                    file.delete();
+            }
+        }
+    }
+
+
+    private static boolean findInAllYandexFiles(String pathName) {
+        for(String elem: allFilesOnYaDisk) {
+            if(elem.contains(pathName))
+                return true;
+        }
+        return false;
+    }
     private static void uploadFile(String path) throws ServerException, IOException {
-        System.out.println(path);
-        //добавить загрузку папок
-        restClient.uploadFile(restClient.getUploadLink(path.substring(path.lastIndexOf("\\") + 1), true),
+        System.out.println(mainPath + path);
+        if(new File(mainPath + path).isDirectory()) {
+            restClient.makeFolder(path.replace("\\", "/"));
+            return;
+        }
+
+        if(path.contains("\\")) {
+            String newPath = path.substring(0, path.lastIndexOf("\\"));
+            List<String> arr = List.of(newPath.split("\\\\"));
+            StringBuilder fullPath = new StringBuilder("");
+            if (!arr.isEmpty()) {
+                for (String elem : arr) {
+                    fullPath.append(elem);
+                    if (!findInAllYandexFiles(fullPath.toString())) {
+                        restClient.makeFolder(fullPath.toString());
+                    }
+                    fullPath.append("/");
+                }
+            }
+        }
+        allFilesOnYaDisk.add("disk:" + path.replace("\\", "/"));
+        restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
                 true,
                 new File(mainPath + path.substring(path.lastIndexOf("/") + 1)),
                 listener);
+
     }
 
 

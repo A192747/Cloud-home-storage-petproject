@@ -35,12 +35,13 @@ public class Supervisor implements Runnable {
                 synchronized (mutex) {
                     mutex.wait();
                     System.out.println("Я сработал супервизор");
-                    String str = "";
+                    StringBuilder str = new StringBuilder();
                     List<Resource> list = StorageController.getDiskInfo();
                     StorageController.needDownloadFiles = list;
+                    StorageController.addFilesInList();
                     System.out.println(list);
                     for (int i = 0; i < list.size(); i++) {
-                        str += list.get(i).getPath() + "\n";
+                        str.append(i + 1).append(" ").append(list.get(i).getPath()).append("\n");
                     }
 
                     Bot.status = BotStatus.SAVE_QUESTION;
