@@ -293,9 +293,9 @@ public class Bot extends LongPollBot {
                             return;
                         }
                         if(isNumeric(text)
-                                && 0 < Integer.valueOf(text)
-                                && Integer.valueOf(text) <= paths.size()) {
-                            StorageController.chosenPath = paths.get(Integer.valueOf(text) - 1);
+                                && 0 < Integer.parseInt(text)
+                                && Integer.parseInt(text) <= paths.size()) {
+                            StorageController.chosenPath = paths.get(Integer.parseInt(text) - 1);
                             status = BotStatus.MAIN;
                             sendMessage("Папка выбрана. Можете загружать файлы на яндекс диск");
                         } else {
@@ -309,39 +309,41 @@ public class Bot extends LongPollBot {
                                 return;
                             }
                             if (obj.has("key")) {
+                                status = BotStatus.MAIN;
                                 switch (obj.get("key").getAsString()) {
                                     case "save" -> {
+                                        new Thread(() -> {
+                                            try {
+                                                synchronized (Main.mutexWaitAnswer) {
+                                                    sendMessage("Загрузка началась");
 
-                                        sendMessage("Загрузка началась");
-                                        StorageController.saveFromYandex();
+                                                    StorageController.handleSaveFromYandex();
 
-                                        status = BotStatus.MAIN;
-                                        sendMessage("Файлы загружены");
-                                        StorageController.deleteFromYandex();
-                                        if(StorageController.getAutoCleanUpValue()) {
-                                            sendMessage("Яндекс диск очищен");
-                                        }
+                                                    StorageController.info = new ArrayList<>();
 
-                                        StorageController.info = new ArrayList<>();
-                                        Thread.sleep(500);
-                                        Main.mutexWaitAnswer.notify();
-
+                                                    sendMessage("Файлы загружены");
+                                                    StorageController.deleteFromYandex();
+                                                    if (StorageController.getAutoCleanUpValue()) {
+                                                        sendMessage("Яндекс диск очищен");
+                                                    }
+                                                    Main.mutexWaitAnswer.notify();
+                                                }
+                                            } catch (VkApiException | ServerException | IOException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        }).start();
                                     }
                                     case "update" -> {
                                         StorageController.info = new ArrayList<>();
-                                        status = BotStatus.MAIN;
-                                        Thread.sleep(500);
                                         Main.mutexWaitAnswer.notify();
                                     }
                                     case "cansel" -> {
-                                        StorageController.info = StorageController.needDownloadFiles;
-                                        //StorageController.needDownloadFiles = null;
-                                        status = BotStatus.MAIN;
+                                        StorageController.info = StorageController.getDiskInfo();
                                         sendMessage("Отмена");
-                                        Thread.sleep(500);
                                         Main.mutexWaitAnswer.notify();
                                     }
                                 }
+
                             } else {
                                 sendMessage("Я вас не понял");
                             }
@@ -349,8 +351,8 @@ public class Bot extends LongPollBot {
                     }
                 }
 
-            } catch(VkApiException | ServerException | IOException | InvocationTargetException |
-                    IllegalAccessException | InterruptedException e){
+            } catch (VkApiException | ServerException | IOException | InvocationTargetException |
+                    IllegalAccessException e){
                 try {
                     sendMessage("Я сломался");
                     throw new RuntimeException(e);

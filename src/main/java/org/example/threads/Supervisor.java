@@ -37,8 +37,6 @@ public class Supervisor implements Runnable {
                     System.out.println("Я сработал супервизор");
                     StringBuilder str = new StringBuilder();
                     List<Resource> list = StorageController.getDiskInfo();
-                    StorageController.needDownloadFiles = list;
-                    StorageController.addFilesInList();
                     System.out.println(list);
                     for (int i = 0; i < list.size(); i++) {
                         str.append(i + 1).append(" ").append(list.get(i).getPath()).append("\n");

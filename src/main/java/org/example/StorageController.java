@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Properties;
 
 public class StorageController {
-    public static List<Resource> needDownloadFiles;
-
     private static final Listener listener = new Listener();
     private static final Properties properties = Main.properties;
     private static RestClient restClient;
@@ -36,18 +34,43 @@ public class StorageController {
         build = new ResourcesArgs.Builder();
         build.setPath("/");
         info = new ArrayList<>();
-        allFilesOnYaDisk = new ArrayList<>();
     }
     public static void createSubdirectories(String path) {
-
         String tempPath = chosenPath.contains("/") ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
         System.out.println("createSubdirectories" + mainPath + "\\" + tempPath +
                 path.substring(0, path.lastIndexOf("/")));
-        File dir = new File(mainPath + "\\" + tempPath +
-                path.substring(0, path.lastIndexOf("/")));
-        if (!dir.exists()) {
-            dir.mkdirs();
+
+//        File dir = new File(mainPath + "\\" + tempPath +
+//                path.substring(0, path.lastIndexOf("/")));
+
+        if(path.contains("/")) {
+            String newPath = path.substring(0, path.lastIndexOf("/"));
+            List<String> arr = List.of(newPath.split("/"));
+            System.out.println(arr);
+            //System.exit(1);
+            StringBuilder fullPath = new StringBuilder(mainPath + "\\" + tempPath);
+            if (!arr.isEmpty()) {
+                for (String elem : arr) {
+                    fullPath.append(elem);
+                    File dir = new File(fullPath.toString());
+                    //System.out.println("fullPath" + fullPath);
+                    if(!dir.exists()) {
+                        System.out.println("if" + fullPath);
+                        dir.mkdir();
+                    }
+//                    try {
+//                        //restClient.makeFolder(fullPath.toString());
+//                    } catch (ServerIOException ignored) {
+//                        System.out.println("Такая папка существует");
+//                    }
+                    fullPath.append("/");
+                }
+            }
         }
+
+//        if (!dir.exists()) {
+//            dir.mkdir();
+//        }
     }
     public static long getYandexFreeStorageSize() throws ServerIOException, IOException {
         return restClient.getDiskInfo().getTotalSpace();
@@ -62,15 +85,21 @@ public class StorageController {
                 + "Авто очистка корзины после загрузки файлов на лок. хранилище: " + ((StorageController.getAutoCleanUpValue() ? "включено" : "отключено") + "\n"
                 + "Выбранный путь для сохранения файлов: " + (chosenPath.isEmpty() ? "/" : chosenPath));
     }
-    public static void saveFromYandex() throws ServerException, IOException {
+    public static void handleSaveFromYandex() throws ServerException, IOException {
         String path;
-        for(Resource res : needDownloadFiles) {
-            path = res.getPath().getPath();
-            System.out.println(path);
-            if(!res.isDir() && path.split("/").length > 2) {
-                createSubdirectories(path);
+        List<Resource> needDownloadFiles = getDiskInfo();
+        while (!needDownloadFiles.isEmpty()) {
+            for (Resource res : needDownloadFiles) {
+                path = res.getPath().getPath();
+                System.out.println(path);
+                if (!res.isDir() && path.split("/").length > 2) {
+                    createSubdirectories(path);
+                }
+                saveFileFromYandex(path);
             }
-            saveFileFromYandex(path);
+            deleteFromYandex(needDownloadFiles);
+            System.out.println("handleSaveFromYandex " + needDownloadFiles);
+            needDownloadFiles = getDiskInfo();
         }
         chosenPath = "";
     }
@@ -83,12 +112,18 @@ public class StorageController {
         String tempPath = (chosenPath.length() > 1) ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
         System.out.println(mainPath + "\\" + tempPath + path);
         restClient.downloadFile(path,
-                new File(mainPath + "\\"+ tempPath
-                        + path),
+                new File(mainPath + "\\"+ tempPath + path),
                 listener);
     }
     public static void deleteFromYandex() throws ServerIOException, IOException {
         deleteFromYandexMain();
+    }
+    private static void deleteFromYandex(List<Resource> list) throws IOException {
+        String path;
+        for(Resource res : list) {
+            path = res.getPath().getPath();
+            deleteFileFromYandex(path);
+        }
     }
     private static void deleteFromYandexMain() throws ServerIOException, IOException {
         String path;
@@ -117,14 +152,11 @@ public class StorageController {
             restClient.deleteFromTrash(path);
         }
     }
-    private static void deleteFileFromYandex(String path) throws ServerIOException, IOException {
-        allFilesOnYaDisk.removeIf(elem -> elem.equals("disk:" + path));
-        restClient.delete(path, autoCleanUp);
-    }
-    public static List<String> allFilesOnYaDisk;
-    public static void addFilesInList() {
-        for(Resource elem: needDownloadFiles) {
-            allFilesOnYaDisk.add(elem.getPath().getPath());
+    private static void deleteFileFromYandex(String path) throws IOException {
+        try {
+            restClient.delete(path, autoCleanUp);
+        } catch (ServerIOException ignored) {
+            System.out.println("Не удалось удалить, видимо файла не существует");
         }
     }
     public static List<Resource> getDiskInfo() throws ServerIOException, IOException {
@@ -248,7 +280,6 @@ public class StorageController {
             return;
         }
 
-        allFilesOnYaDisk.add("disk:" + path.replace("\\", "/"));
         restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
                 true,
                 new File(mainPath + path.substring(path.lastIndexOf("/") + 1)),
