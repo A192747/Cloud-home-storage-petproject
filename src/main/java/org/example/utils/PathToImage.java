@@ -16,6 +16,8 @@ import java.util.Properties;
 import java.util.Stack;
 
 public class PathToImage {
+
+    private PathToImage() {}
     public static File getPathImage(boolean onlyDirs)  {
         wight = 0;
         height = 0;

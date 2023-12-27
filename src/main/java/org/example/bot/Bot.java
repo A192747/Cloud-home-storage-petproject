@@ -19,7 +19,7 @@ public class Bot extends LongPollBot {
 
     private static final Properties properties = Main.properties;
     public static BotStatus status = BotStatus.MAIN;
-    private static int user_id = Integer.parseInt(properties.getProperty("user_vk_id"));
+    private static final int user_id = Integer.parseInt(properties.getProperty("user_vk_id"));
     public void startSupervisor(){
         Thread thread = new Thread (new Supervisor(vk, properties));
         thread.start();
@@ -159,7 +159,7 @@ public class Bot extends LongPollBot {
                         }
                         List<String> list = StorageController.findSimilarFiles(List.of(text.split(", ")));
                         System.out.println(list);
-                        StringBuilder answer = new StringBuilder("");
+                        StringBuilder answer = new StringBuilder();
                         if(list.size() > 1) {
                             answer.append("Нашлось несколько вариантов. Напишите цифры необходимых вам файлов/папок:\n");
                             status = BotStatus.SELECT_FILES_NUMBER;
@@ -179,9 +179,9 @@ public class Bot extends LongPollBot {
                         for (String path : list) {
                             counter++;
                             if(list.size() == 1)
-                                answer.append(path + "\n");
+                                answer.append(path).append("\n");
                             else
-                                answer.append(counter + " " + path + "\n");
+                                answer.append(counter).append(" ").append(path).append("\n");
                         }
                         if (filesPaths.size() == 1) {
                             StorageController.uploadPaths = filesPaths;
@@ -201,9 +201,9 @@ public class Bot extends LongPollBot {
                         } else {
                             for (String num : numbers) {
                                 if (isNumeric(num)
-                                        && 0 < Integer.valueOf(num)
-                                        && Integer.valueOf(num) <= filesPaths.size()) {
-                                    StorageController.uploadPaths.add(filesPaths.get(Integer.valueOf(num) - 1));
+                                        && 0 < Integer.parseInt(num)
+                                        && Integer.parseInt(num) <= filesPaths.size()) {
+                                    StorageController.uploadPaths.add(filesPaths.get(Integer.parseInt(num) - 1));
                                 } else {
                                     sendMessage("Введите число в пределах от 1 до " + paths.size());
                                     return;
@@ -218,37 +218,35 @@ public class Bot extends LongPollBot {
                         sendMessage("Выбраны следующие файлы: \n" + paths);
                     }
                     case WHAT_NEXT -> {
-                        if (obj != null && !obj.has("key")) {
+                        if ((obj == null || !obj.has("key"))) {
                             handle(obj);
                             return;
                         }
-                        if (obj.has("key")) {
-                            status = BotStatus.MAIN;
-                            switch (obj.get("key").getAsString()) {
-                                case "upload" -> new Thread(() -> {
-                                    try {
-                                        String answer = obj.get("answer").getAsString();
-                                        sendMessage("Началась загрузка файлов");
-                                        StorageController.uploadFilesToYandex();
-                                        sendMessage(answer);
-                                    } catch (ServerException | IOException | VkApiException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }).start();
-                                case "delete" -> new Thread(() -> {
-                                    try {
-                                        String answer = obj.get("answer").getAsString();
-                                        sendMessage("Началось удаление файлов");
-                                        StorageController.deleteFromStorage();
-                                        sendMessage(answer);
-                                    } catch (VkApiException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }).start();
-                                case "cansel" -> {
-                                    StorageController.uploadPaths = null;
-                                    sendMessage(obj.get("answer").getAsString());
+                        status = BotStatus.MAIN;
+                        switch (obj.get("key").getAsString()) {
+                            case "upload" -> new Thread(() -> {
+                                try {
+                                    String answer = obj.get("answer").getAsString();
+                                    sendMessage("Началась загрузка файлов");
+                                    StorageController.uploadFilesToYandex();
+                                    sendMessage(answer);
+                                } catch (ServerException | IOException | VkApiException e) {
+                                    throw new RuntimeException(e);
                                 }
+                            }).start();
+                            case "delete" -> new Thread(() -> {
+                                try {
+                                    String answer = obj.get("answer").getAsString();
+                                    sendMessage("Началось удаление файлов");
+                                    StorageController.deleteFromStorage();
+                                    sendMessage(answer);
+                                } catch (VkApiException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }).start();
+                            case "cansel" -> {
+                                StorageController.uploadPaths = null;
+                                sendMessage(obj.get("answer").getAsString());
                             }
                         }
                     }
@@ -306,6 +304,10 @@ public class Bot extends LongPollBot {
                     }
                     case SAVE_QUESTION -> {
                         synchronized (Main.mutexWaitAnswer) {
+                            if ((obj == null || !obj.has("key"))) {
+                                handle(obj);
+                                return;
+                            }
                             if (obj.has("key")) {
                                 switch (obj.get("key").getAsString()) {
                                     case "save" -> {

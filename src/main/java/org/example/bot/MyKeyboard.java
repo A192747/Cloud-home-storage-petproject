@@ -10,6 +10,8 @@ import org.json.simple.JSONObject;
 import java.util.*;
 
 public class MyKeyboard {
+
+    private MyKeyboard() {}
     private static Map<BotStatus, Keyboard> keys;
     public static void init(){
         keys = new HashMap<>();

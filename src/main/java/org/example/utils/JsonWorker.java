@@ -11,6 +11,8 @@ import java.util.List;
 
 public class JsonWorker {
     private static JSONArray array;
+
+    private JsonWorker() {}
     public static void init() throws IOException, ParseException {
         String path = Main.properties.getProperty("location_keyboard_json");
         JSONParser parser = new JSONParser();

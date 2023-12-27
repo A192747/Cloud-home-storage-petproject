@@ -6,7 +6,6 @@ import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.ServerException;
 import com.yandex.disk.rest.exceptions.ServerIOException;
-import com.yandex.disk.rest.exceptions.WrongMethodException;
 import com.yandex.disk.rest.json.Resource;
 import org.example.utils.Listener;
 
@@ -19,10 +18,10 @@ import java.util.Properties;
 public class StorageController {
     public static List<Resource> needDownloadFiles;
 
-    private static Listener listener = new Listener();
+    private static final Listener listener = new Listener();
     private static final Properties properties = Main.properties;
     private static RestClient restClient;
-    private static String mainPath = properties.getProperty("location_to_sync");
+    private static final String mainPath = properties.getProperty("location_to_sync");
 
     private static ResourcesArgs.Builder build;
     public static List<Resource> info;
@@ -40,8 +39,12 @@ public class StorageController {
         allFilesOnYaDisk = new ArrayList<>();
     }
     public static void createSubdirectories(String path) {
-        System.out.println(mainPath + path.substring(0, path.lastIndexOf("/")));
-        File dir = new File(mainPath + path.substring(0, path.lastIndexOf("/")));
+
+        String tempPath = chosenPath.contains("/") ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
+        System.out.println("createSubdirectories" + mainPath + "\\" + tempPath +
+                path.substring(0, path.lastIndexOf("/")));
+        File dir = new File(mainPath + "\\" + tempPath +
+                path.substring(0, path.lastIndexOf("/")));
         if (!dir.exists()) {
             dir.mkdirs();
         }
@@ -57,26 +60,31 @@ public class StorageController {
         return "Занятого места на я.диске около: " + Math.round(getYandexUsedStorageSize() / Math.pow(1024, 2))+ "мб\n"
                 + "Свободного места на я.диске около: " + getYandexFreeStorageSize() / Math.pow(1024, 3) + "гб\n"
                 + "Авто очистка корзины после загрузки файлов на лок. хранилище: " + ((StorageController.getAutoCleanUpValue() ? "включено" : "отключено") + "\n"
-                + "Выбранный путь для сохранения файлов: " + (chosenPath.length() == 0 ? "/" : chosenPath));
+                + "Выбранный путь для сохранения файлов: " + (chosenPath.isEmpty() ? "/" : chosenPath));
     }
     public static void saveFromYandex() throws ServerException, IOException {
         String path;
         for(Resource res : needDownloadFiles) {
             path = res.getPath().getPath();
             System.out.println(path);
-            if(!res.isDir() && path.split("/").length > 2)
+            if(!res.isDir() && path.split("/").length > 2) {
                 createSubdirectories(path);
+            }
             saveFileFromYandex(path);
         }
         chosenPath = "";
     }
     private static void saveFileFromYandex(String path) throws ServerException, IOException {
         File file = new File(mainPath + "\\" + chosenPath + path);
+        System.out.println("saveFileFromYandex" + mainPath + "\\" + chosenPath + path);
         if (file.exists())
             file.delete();
-        System.out.println(mainPath + "\\" + chosenPath + path);
+        System.out.println(chosenPath);
+        String tempPath = (chosenPath.length() > 1) ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
+        System.out.println(mainPath + "\\" + tempPath + path);
         restClient.downloadFile(path,
-                new File(mainPath + "\\"+ chosenPath + path),
+                new File(mainPath + "\\"+ tempPath
+                        + path),
                 listener);
     }
     public static void deleteFromYandex() throws ServerIOException, IOException {
@@ -110,12 +118,7 @@ public class StorageController {
         }
     }
     private static void deleteFileFromYandex(String path) throws ServerIOException, IOException {
-        System.out.println("disk:" + path);
-        System.out.println(allFilesOnYaDisk);
-        for(String elem : allFilesOnYaDisk) {
-            if (elem.equals("disk:" + path))
-                allFilesOnYaDisk.remove(elem);
-        }
+        allFilesOnYaDisk.removeIf(elem -> elem.equals("disk:" + path));
         restClient.delete(path, autoCleanUp);
     }
     public static List<String> allFilesOnYaDisk;
@@ -136,7 +139,7 @@ public class StorageController {
             if (directory.isDirectory()) {
                 getFilesAndFoldersList(directory, list, mainPath);
                 for (String file : list) {
-                    file = file.substring(mainPath.length(), file.length());
+                    file = file.substring(mainPath.length());
                     if (file.contains(name) && !result.contains(file))
                         result.add(file);
                 }
@@ -164,7 +167,7 @@ public class StorageController {
         if (directory.isDirectory()) {
             getFoldersList(directory, list, mainPath);
             for (String folder : list) {
-                folder = folder.substring(mainPath.length(), folder.length());
+                folder = folder.substring(mainPath.length());
                 if(folder.contains(name))
                     result.add(folder);
             }
@@ -198,10 +201,11 @@ public class StorageController {
     private static void deleteFileFromStorage(String path) {
         File file = new File(mainPath + path);
         if(file.exists()) {
-            if(file.isDirectory())
+            if(file.isDirectory()) {
+                System.out.println("Это папка");
                 deleteDir(file);
-            else
-                file.delete();
+            }
+            file.delete();
         }
     }
 
@@ -209,27 +213,16 @@ public class StorageController {
         File[] files = dir.listFiles();
         if(files.length > 0) {
             for (File file : files) {
-                if (file.isDirectory()) {
+                if (file.isDirectory())
                     deleteDir(file);
-                    file.delete();
-                }
-                if (file.isFile())
-                    file.delete();
+                file.delete();
             }
         }
     }
 
-
-    private static boolean findInAllYandexFiles(String pathName) {
-        for(String elem: allFilesOnYaDisk) {
-            if(elem.contains(pathName))
-                return true;
-        }
-        return false;
-    }
     private static void uploadFile(String path) throws ServerException, IOException {
         System.out.println(mainPath + path);
-        if(new File(mainPath + path).isDirectory()) {
+        if(!path.contains("\\") && new File(mainPath + path).isDirectory()) {
             restClient.makeFolder(path.replace("\\", "/"));
             return;
         }
@@ -241,13 +234,20 @@ public class StorageController {
             if (!arr.isEmpty()) {
                 for (String elem : arr) {
                     fullPath.append(elem);
-                    if (!findInAllYandexFiles(fullPath.toString())) {
+                    try {
                         restClient.makeFolder(fullPath.toString());
+                    } catch (ServerIOException ignored) {
+                        System.out.println("Такая папка существует");
                     }
                     fullPath.append("/");
                 }
             }
         }
+        if(new File(mainPath + path).isDirectory()) {
+            restClient.makeFolder(path.replace("\\", "/"));
+            return;
+        }
+
         allFilesOnYaDisk.add("disk:" + path.replace("\\", "/"));
         restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
                 true,
