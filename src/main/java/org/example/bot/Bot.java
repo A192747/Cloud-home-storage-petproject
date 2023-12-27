@@ -223,7 +223,7 @@ public class Bot extends LongPollBot {
                             return;
                         }
                         if (obj.has("key")) {
-                            System.out.println(obj.get("key").getAsString());
+                            status = BotStatus.MAIN;
                             switch (obj.get("key").getAsString()) {
                                 case "upload" -> new Thread(() -> {
                                     try {
@@ -246,7 +246,6 @@ public class Bot extends LongPollBot {
                                     }
                                 }).start();
                                 case "cansel" -> {
-                                    status = BotStatus.MAIN;
                                     StorageController.uploadPaths = null;
                                     sendMessage(obj.get("answer").getAsString());
                                 }
