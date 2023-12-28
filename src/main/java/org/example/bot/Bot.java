@@ -11,9 +11,14 @@ import org.example.StorageController;
 import org.example.threads.Supervisor;
 import org.example.utils.PathToImage;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.List;
 
 public class Bot extends LongPollBot {
 
@@ -27,7 +32,7 @@ public class Bot extends LongPollBot {
 
     private void sendMessage(String str) throws VkApiException {
         vk.messages.send()
-                .setMessage(str)
+                .setMessage(str.substring(0, Math.min(str.length(), 4096)))
                 .setPeerId(user_id)
                 .setKeyboard(MyKeyboard.getKeyboard(status))
                 .execute();
@@ -40,8 +45,25 @@ public class Bot extends LongPollBot {
                 .addPhoto(photo)
                 .execute();
     }
+    private void sendMessageWithFile(String str, File file) throws VkApiException {
+        vk.messages.send()
+                .setMessage(str)
+                .setPeerId(user_id)
+                .setKeyboard(MyKeyboard.getKeyboard(status))
+                .addDoc(file)
+                .execute();
+    }
     private void getAllStorageInfo() throws VkApiException, ServerIOException, IOException {
         sendMessage(StorageController.getAllStorageInfo());
+    }
+    private void selectHowSendPhoto(String answer, File photo) throws IOException, VkApiException {
+        BufferedImage image = ImageIO.read(photo);
+        int height = image.getHeight();
+        int wight = image.getWidth();
+        if(height < 2000 && height <= wight * 2)
+            sendMessage(answer, photo);
+        else
+            sendMessageWithFile(answer, photo);
     }
     private void invokeMethod(String name) throws VkApiException, ServerIOException, IOException {
         switch (name) {
@@ -70,9 +92,14 @@ public class Bot extends LongPollBot {
                 status = BotStatus.SELECT_A_FILE;
                 if(Main.locationToSync.isDirectory()) {
                     if(Main.locationToSync.listFiles().length > 0) {
-                        sendMessage("Напишите название папок или файлов, которые хотите загрузить на я.диск\n" +
-                                        "*Удобнее загружать папку целиком на диск*",
-                                PathToImage.getPathImage(false));
+                        try {
+                            selectHowSendPhoto("Напишите название папок или файлов, которые хотите загрузить на я.диск\n" +
+                                            "*Удобнее загружать папку целиком на диск*",
+                                    PathToImage.getPathImage(false)
+                            );
+                        } catch (RasterFormatException e) {
+                            sendMessage("У вас на диске очень много файлов. Введите название файлов/папок для загрузки");
+                        }
                     } else {
                         status = BotStatus.MAIN;
                         sendMessage("Нет файлов для загрузки!");
@@ -86,8 +113,12 @@ public class Bot extends LongPollBot {
                 status = BotStatus.SELECT_DIR;
                 if(Main.locationToSync.isDirectory()) {
                     if (Main.locationToSync.listFiles().length > 0) {
-                        sendMessage("Напишите название папки, чтобы файлы из я.диска сохранились именно в неё",
-                                PathToImage.getPathImage(true));
+                        try {
+                            selectHowSendPhoto("Напишите название папки, чтобы файлы из я.диска сохранились именно в неё",
+                                    PathToImage.getPathImage(true));
+                        } catch (RasterFormatException e) {
+                            sendMessage("У вас на диске очень много папок. Введите название папки для загрузки");
+                        }
                     } else {
                         status = BotStatus.MAIN;
                         sendMessage("Так как в папке, в которую сохраняются файлы нет папок для выбора, будет использоваться" +
@@ -328,14 +359,11 @@ public class Bot extends LongPollBot {
                                                     }
                                                     Main.mutexWaitAnswer.notify();
                                                 }
-                                            } catch (VkApiException | ServerException | IOException e) {
+                                            } catch (VkApiException | ServerException | IOException |
+                                                     InterruptedException e) {
                                                 throw new RuntimeException(e);
                                             }
                                         }).start();
-                                    }
-                                    case "update" -> {
-                                        StorageController.info = new ArrayList<>();
-                                        Main.mutexWaitAnswer.notify();
                                     }
                                     case "cansel" -> {
                                         StorageController.info = StorageController.getDiskInfo();

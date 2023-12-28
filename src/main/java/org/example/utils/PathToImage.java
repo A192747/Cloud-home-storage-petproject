@@ -24,7 +24,7 @@ public class PathToImage {
         String path = Main.properties.getProperty("location_to_sync").toString();
         File directory = new File(path);
         if (directory.isDirectory()) {
-            BufferedImage image = new BufferedImage(10000, 10000, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(10000,10000, BufferedImage.TYPE_INT_ARGB);
             Graphics g = image.getGraphics();
             g.setColor(Color.WHITE);
             g.fillRect(0, 0, image.getWidth(), image.getHeight());

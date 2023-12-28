@@ -54,10 +54,8 @@
       },
       "1Line": {
         "0": {
-          "text": "Обновить",
-          "color": "PRIMARY",
-          "key": "update",
-          "next_status": "SAVE_QUESTION"
+          "text": "",
+          "color": ""
         },
         "1": {
           "text": "",

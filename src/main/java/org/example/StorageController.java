@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 public class StorageController {
@@ -85,7 +86,7 @@ public class StorageController {
                 + "Авто очистка корзины после загрузки файлов на лок. хранилище: " + ((StorageController.getAutoCleanUpValue() ? "включено" : "отключено") + "\n"
                 + "Выбранный путь для сохранения файлов: " + (chosenPath.isEmpty() ? "/" : chosenPath));
     }
-    public static void handleSaveFromYandex() throws ServerException, IOException {
+    public static void handleSaveFromYandex() throws ServerException, IOException, InterruptedException {
         String path;
         List<Resource> needDownloadFiles = getDiskInfo();
         while (!needDownloadFiles.isEmpty()) {
@@ -103,7 +104,7 @@ public class StorageController {
         }
         chosenPath = "";
     }
-    private static void saveFileFromYandex(String path) throws ServerException, IOException {
+    private static void saveFileFromYandex(String path) throws InterruptedException {
         File file = new File(mainPath + "\\" + chosenPath + path);
         System.out.println("saveFileFromYandex" + mainPath + "\\" + chosenPath + path);
         if (file.exists())
@@ -111,9 +112,19 @@ public class StorageController {
         System.out.println(chosenPath);
         String tempPath = (chosenPath.length() > 1) ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
         System.out.println(mainPath + "\\" + tempPath + path);
-        restClient.downloadFile(path,
-                new File(mainPath + "\\"+ tempPath + path),
-                listener);
+        boolean pass = false;
+        while (!pass) {
+            try {
+                restClient.downloadFile(path,
+                        new File(mainPath + "\\" + tempPath + path),
+                        listener);
+                pass = true;
+            } catch (Exception ignored) {
+                System.out.println("Файл не скачался. Пробую ещё раз");
+                Thread.sleep(500);
+            }
+        }
+
     }
     public static void deleteFromYandex() throws ServerIOException, IOException {
         deleteFromYandexMain();
@@ -169,7 +180,7 @@ public class StorageController {
         File directory = new File(mainPath);
         for (String name: names) {
             if (directory.isDirectory()) {
-                getFilesAndFoldersList(directory, list, mainPath);
+                getFilesAndFoldersList(directory, list);
                 for (String file : list) {
                     file = file.substring(mainPath.length());
                     if (file.contains(name) && !result.contains(file))
@@ -180,12 +191,12 @@ public class StorageController {
         return result;
 
     }
-    private static void getFilesAndFoldersList(File directory, List<String> filesAndFolders, String basePath) {
+    private static void getFilesAndFoldersList(File directory, List<String> filesAndFolders) {
         File[] files = directory.listFiles();
         for (File file : files) {
             if (file.isDirectory()) {
                 filesAndFolders.add(file.getAbsolutePath());
-                getFilesAndFoldersList(file, filesAndFolders, basePath);
+                getFilesAndFoldersList(file, filesAndFolders);
             } else {
                 filesAndFolders.add(file.getAbsolutePath());
             }
@@ -252,38 +263,88 @@ public class StorageController {
         }
     }
 
+    private static List<File> getFilesArray(List<File> files) {
+        List<File> res = new ArrayList<>();
+        for(File file: files) {
+            if(file.isFile())
+                res.add(file);
+        }
+        return res;
+    }
+
+    private static List<File> getDirsArray(List<File> files) {
+        List<File> res = new ArrayList<>();
+        for(File file: files) {
+            if(file.isDirectory())
+                res.add(file);
+        }
+        return res;
+    }
+
     private static void uploadFile(String path) throws ServerException, IOException {
         System.out.println(mainPath + path);
-        if(!path.contains("\\") && new File(mainPath + path).isDirectory()) {
-            restClient.makeFolder(path.replace("\\", "/"));
-            return;
-        }
+        String fullPath = mainPath + path;
+        File tempFile = new File(fullPath);
+        List<File> listOfFiles = List.of(Objects.requireNonNull(tempFile.listFiles()));
+        List<File> files;
+        List<File> dirs;
+        System.out.println(listOfFiles);
+        if(tempFile.isDirectory() && !listOfFiles.isEmpty()) {
+            System.out.println(tempFile.getPath());
+            try {
+                String tempPath = tempFile.getPath().replace(mainPath, "").replace("\\", "/");
+                System.out.println(tempFile);
+                restClient.makeFolder(tempPath);
+            } catch (Exception ignored) {
+                System.out.println("Возможно папка уже была создана");
+            }
 
-        if(path.contains("\\")) {
-            String newPath = path.substring(0, path.lastIndexOf("\\"));
-            List<String> arr = List.of(newPath.split("\\\\"));
-            StringBuilder fullPath = new StringBuilder("");
-            if (!arr.isEmpty()) {
-                for (String elem : arr) {
-                    fullPath.append(elem);
-                    try {
-                        restClient.makeFolder(fullPath.toString());
-                    } catch (ServerIOException ignored) {
-                        System.out.println("Такая папка существует");
-                    }
-                    fullPath.append("/");
-                }
+            files = getFilesArray(listOfFiles);
+            dirs = getDirsArray(listOfFiles);
+            for(File file: files) {
+                System.out.println("Загрузка файла " + file.getPath());
+                restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
+                true,
+                        file,
+                        listener);
+            }
+            for(File dir: dirs) {
+                System.out.println("Dirs for " + dir.getPath());
+                uploadFile(dir.getPath());
             }
         }
-        if(new File(mainPath + path).isDirectory()) {
-            restClient.makeFolder(path.replace("\\", "/"));
-            return;
-        }
-
-        restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
-                true,
-                new File(mainPath + path.substring(path.lastIndexOf("/") + 1)),
-                listener);
+//        if(!path.contains("\\") && tempFile.isDirectory() && tempFile.listFiles().length == 0) {
+//            restClient.makeFolder(path.replace("\\", "/"));
+//            return;
+//        }
+//        System.out.println(path);
+//        if(path.contains("\\")) {
+//            String newPath = path.substring(0, path.lastIndexOf("\\"));
+//            List<String> arr = List.of(newPath.split("\\\\"));
+//            StringBuilder fullPath = new StringBuilder();
+//            if (!arr.isEmpty()) {
+//                for (String elem : arr) {
+//                    fullPath.append(elem);
+//                    File file = new File(fullPath.toString());
+//                    System.out.println(file.exists() + " " + file.isDirectory());
+//                    try {
+//                        restClient.makeFolder(fullPath.toString());
+//                    } catch (ServerIOException ignored) {
+//                        System.out.println("Такая папка существует");
+//                    }
+//                    fullPath.append("/");
+//                }
+//            }
+//        }
+//        if(new File(mainPath + path).isDirectory()) {
+//            restClient.makeFolder(path.replace("\\", "/"));
+//            return;
+//        }
+//
+//        restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
+//                true,
+//                new File(mainPath + path.substring(path.lastIndexOf("/") + 1)),
+//                listener);
 
     }
 
