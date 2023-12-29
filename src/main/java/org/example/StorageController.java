@@ -281,37 +281,56 @@ public class StorageController {
         return res;
     }
 
+    private static void makeDirsOnYandex(String path) {
+        List<String> dirs = List.of(path.split("\\\\"));
+        StringBuilder fullPath = new StringBuilder();
+        for (String dir: dirs) {
+            fullPath.append(dir);
+            try {
+                restClient.makeFolder(fullPath.toString());
+                System.out.println(fullPath);
+            } catch (Exception ignored) {
+                System.out.println("Возможно папка существует" + fullPath + " " + ignored);
+            }
+            fullPath.append("/");
+        }
+    }
+
     private static void uploadFile(String path) throws ServerException, IOException {
         System.out.println(mainPath + path);
         String fullPath = mainPath + path;
         File tempFile = new File(fullPath);
-        List<File> listOfFiles = List.of(Objects.requireNonNull(tempFile.listFiles()));
-        List<File> files;
-        List<File> dirs;
-        System.out.println(listOfFiles);
-        if(tempFile.isDirectory() && !listOfFiles.isEmpty()) {
+
+
+        if(tempFile.isDirectory() && !List.of(tempFile.listFiles()).isEmpty()) {
             System.out.println(tempFile.getPath());
-            try {
-                String tempPath = tempFile.getPath().replace(mainPath, "").replace("\\", "/");
-                System.out.println(tempFile);
-                restClient.makeFolder(tempPath);
-            } catch (Exception ignored) {
-                System.out.println("Возможно папка уже была создана");
-            }
+
+            List<File> listOfFiles = List.of(tempFile.listFiles());
+            List<File> files;
+            List<File> dirs;
+            System.out.println(listOfFiles);
+
+            String tempPath = tempFile.getPath().substring(mainPath.length());
+            makeDirsOnYandex(tempPath);
 
             files = getFilesArray(listOfFiles);
             dirs = getDirsArray(listOfFiles);
             for(File file: files) {
                 System.out.println("Загрузка файла " + file.getPath());
-                restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
+                restClient.uploadFile(restClient.getUploadLink(file.getAbsolutePath().substring(mainPath.length()).replace("\\", "/"), true),
                 true,
                         file,
                         listener);
             }
             for(File dir: dirs) {
                 System.out.println("Dirs for " + dir.getPath());
-                uploadFile(dir.getPath());
+                uploadFile(dir.getAbsolutePath().substring(mainPath.length()));
             }
+        } else {
+            restClient.uploadFile(restClient.getUploadLink(path.substring(path.lastIndexOf("\\")).replace("\\", "/"), true),
+                    true,
+                    tempFile,
+                    listener);
         }
 //        if(!path.contains("\\") && tempFile.isDirectory() && tempFile.listFiles().length == 0) {
 //            restClient.makeFolder(path.replace("\\", "/"));

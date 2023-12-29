@@ -2,5 +2,5 @@ config.properties
 resources
 .idea
 target
-YandexDiskLoader.iml
+*.iml
 tree.png
