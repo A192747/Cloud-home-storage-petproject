@@ -1,0 +1,300 @@
+[
+  {
+    "MAIN": {
+      "0Line": {
+        "0": {
+          "text": "Выбрать файлы",
+          "color": "POSITIVE",
+          "function_name": "getPathImage"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": { 
+        "0": {
+          "text": "Выбрать папку для сохранения на пк",
+          "color": "PRIMARY",
+          "function_name": "getPathForDirsImage"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "Инфо",
+          "color": "SECONDARY",
+          "function_name": "getAllStorageInfo"
+        },
+        "1": {
+          "text": "Настройки",
+          "color": "NEGATIVE",
+          "answer": "Перехожу в настройки",
+          "next_status": "SETTINGS"
+        }
+      }
+    }
+  },
+  {
+    "SAVE_QUESTION": {
+      "0Line": {
+        "0": {
+          "text": "Сохранить",
+          "color": "POSITIVE",
+          "key": "save",
+          "next_status": "MAIN"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "Отмена",
+          "color": "NEGATIVE",
+          "key": "cansel",
+          "next_status": "MAIN"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SETTINGS": {
+      "0Line": {
+        "0": {
+          "text": "On/Off авто очищение корзины",
+          "color": "SECONDARY",
+          "function_name": "controlYandexAutoCleanUpTrash"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "Отчистить корзину",
+          "color": "SECONDARY",
+          "function_name": "deleteFromYandexTrash"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "next_status": "MAIN",
+          "answer": "Назад"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SELECT_A_FILE": {
+      "0Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "next_status": "MAIN",
+          "answer": "Назад"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SELECT_DIR" : {
+      "0Line": {
+        "0": {
+          "text": "Сбросить путь",
+          "color": "SECONDARY",
+          "function_name": "setDefaultPath"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "next_status": "MAIN",
+          "answer": "Назад"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SELECT_DIR_NUMBER": {
+      "0Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "function_name": "getPathForDirsImage"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "SELECT_FILES_NUMBER": {
+      "0Line": {
+        "0": {
+          "text": "Назад",
+          "color": "PRIMARY",
+          "function_name": "getPathImage"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "",
+          "color": ""
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  },
+  {
+    "WHAT_NEXT": {
+      "0Line": {
+        "0": {
+          "text": "Загрузить на я.диск",
+          "color": "POSITIVE",
+          "answer": "Файлы загружены на яндекс диск",
+          "key": "upload"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "1Line": {
+        "0": {
+          "text": "Удалить из лок. хранилища",
+          "color": "NEGATIVE",
+          "answer": "Файлы удалены из лок. хранилища",
+          "key": "delete"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      },
+      "2Line": {
+        "0": {
+          "text": "Отмена",
+          "color": "PRIMARY",
+          "answer": "Отмена",
+          "key": "cansel"
+        },
+        "1": {
+          "text": "",
+          "color": ""
+        }
+      }
+    }
+  }
+]
