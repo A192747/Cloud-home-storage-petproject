@@ -37,6 +37,7 @@
 <br/>
 Далее пользователь вводит необходимые ему названия файлов через запятую (к примеру: Горы, Зима, Море), либо названия папок<br/>
 ![Screenshot](https://github.com/A192747/Cloud_home_storage/blob/main/images/image4.jpg)
+<br/>
 Затем пользоваель выбирает подходящие ему варианты (вводя ответ в формате "1, 2, 3, 4" или написав "Все")<br/>
 Пользователь может решить что дальше сделать с файлами. Загрузить на яндекс диск, или удалить из локального хранилища<br/>
 ![Screenshot](https://github.com/A192747/Cloud_home_storage/blob/main/images/image5.jpg)
@@ -59,3 +60,18 @@
 
 ### Кнопки в настройках
 ![Screenshot](https://github.com/A192747/Cloud_home_storage/blob/main/images/image8.jpg)
+<br/>
+
+## Быстрый старт
+Необходимо заполнить (создать) файл config.properties с полями из [config.properties.origin](https://github.com/A192747/Cloud_home_storage/blob/main/config.properties.origin)
+Формат ввода полей необходимо соблюдать такой-же.
+
+*yandex_token* можно получить благодаря инструкции с [этого](https://yandex.ru/dev/disk/api/concepts/quickstart.html) сайта <br/>
+*vk_token* можно получить при создании группы в вк<br/>
+*user_vk_id* укажите ваш id пользователя в вк (обязательно цифрами)<br/>
+*location_to_sync* укажите путь, куда будут сохраняться файлы на локальном хранилище (с \\ в конце)<br/>
+*location_keyboard_json* укажите путь до файла keyboard.json (если вы решили его переместить)<br/>
+*update_delay* укажите задержку на обновление демона, который проверяет наличие новых файлов на яндекс диске. (советую оставить 5000)<br/>
+
+
+
