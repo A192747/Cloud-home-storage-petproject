@@ -12,7 +12,6 @@ import org.example.threads.Supervisor;
 import org.example.utils.PathToImage;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.*;
@@ -83,7 +82,7 @@ public class Bot extends LongPollBot {
                         StorageController.deleteFromYandexTrash();
                         sendMessage("Корзина очищена");
                     } catch (Exception e) {
-                        System.out.println("Не удалось очистить корзину");
+                        //System.out.println("Не удалось очистить корзину");
                         throw new RuntimeException(e);
                     }
                 }).start();
@@ -189,7 +188,7 @@ public class Bot extends LongPollBot {
                             return;
                         }
                         List<String> list = StorageController.findSimilarFiles(List.of(text.split(", ")));
-                        System.out.println(list);
+                        //System.out.println(list);
                         StringBuilder answer = new StringBuilder();
                         if(list.size() > 1) {
                             answer.append("Нашлось несколько вариантов. Напишите цифры необходимых вам файлов/папок:\n");
@@ -396,34 +395,4 @@ public class Bot extends LongPollBot {
     public String getAccessToken() {
         return properties.getProperty("vk_token");
     }
-
-
-//        Credentials credentials = new Credentials("fedor", properties.getProperty("yandex_token"));
-//        RestClient restClient = new RestClient(credentials);
-//
-//        ResourcePath path;
-//        for (Resource res: list) {
-//            System.out.println(res.getName());
-//        }
-//        ResourcesArgs.Builder builder = new ResourcesArgs.Builder();
-//        builder.setPath("/newFolder");
-//        path = restClient.getResources(builder.build()).getResourceList().getItems().get(0).getPath();
-//        System.out.println(path);
-//        Listener listener = new Listener();
-//
-//        //СКАЧИВАНИЕ ФАЙЛА С ЯНДЕКС ДИСКА
-//        //restClient.downloadFile(path.getPath(), new File(properties.getProperty("location_to_sync") + "ss.pdf"), listener);
-//        System.out.println("файл скачан");
-//
-//        //ЗАГРУЗКА ФАЙЛА НА ЯНДЕКС ДИСК
-//        System.out.println(path.getPath().substring(0,15));
-//        restClient.uploadFile(restClient.getUploadLink(path.getPath().substring(0,15), true),
-//                true,
-//                new File(properties.getProperty("location_to_sync") + "ss.pdf"),
-//                listener);
-//
-//
-//        System.out.println("файл загружен!");
-
-
 }

@@ -38,40 +38,23 @@ public class StorageController {
     }
     public static void createSubdirectories(String path) {
         String tempPath = chosenPath.contains("/") ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
-        System.out.println("createSubdirectories" + mainPath + "\\" + tempPath +
-                path.substring(0, path.lastIndexOf("/")));
-
-//        File dir = new File(mainPath + "\\" + tempPath +
-//                path.substring(0, path.lastIndexOf("/")));
 
         if(path.contains("/")) {
             String newPath = path.substring(0, path.lastIndexOf("/"));
             List<String> arr = List.of(newPath.split("/"));
-            System.out.println(arr);
-            //System.exit(1);
             StringBuilder fullPath = new StringBuilder(mainPath + "\\" + tempPath);
             if (!arr.isEmpty()) {
                 for (String elem : arr) {
                     fullPath.append(elem);
                     File dir = new File(fullPath.toString());
-                    //System.out.println("fullPath" + fullPath);
                     if(!dir.exists()) {
-                        System.out.println("if" + fullPath);
                         dir.mkdir();
                     }
-//                    try {
-//                        //restClient.makeFolder(fullPath.toString());
-//                    } catch (ServerIOException ignored) {
-//                        System.out.println("Такая папка существует");
-//                    }
                     fullPath.append("/");
                 }
             }
         }
 
-//        if (!dir.exists()) {
-//            dir.mkdir();
-//        }
     }
     public static long getYandexFreeStorageSize() throws ServerIOException, IOException {
         return restClient.getDiskInfo().getTotalSpace();
@@ -92,27 +75,25 @@ public class StorageController {
         while (!needDownloadFiles.isEmpty()) {
             for (Resource res : needDownloadFiles) {
                 path = res.getPath().getPath();
-                System.out.println(path);
+
                 if (!res.isDir() && path.split("/").length > 2) {
                     createSubdirectories(path);
                 }
                 saveFileFromYandex(path);
             }
             deleteFromYandex(needDownloadFiles);
-            System.out.println("handleSaveFromYandex " + needDownloadFiles);
             needDownloadFiles = getDiskInfo();
         }
         chosenPath = "";
     }
     private static void saveFileFromYandex(String path) throws InterruptedException {
         File file = new File(mainPath + "\\" + chosenPath + path);
-        System.out.println("saveFileFromYandex" + mainPath + "\\" + chosenPath + path);
         if (file.exists())
             file.delete();
-        System.out.println(chosenPath);
         String tempPath = (chosenPath.length() > 1) ? chosenPath.substring(0, chosenPath.length() - 1) : chosenPath;
-        System.out.println(mainPath + "\\" + tempPath + path);
+
         boolean pass = false;
+
         while (!pass) {
             try {
                 restClient.downloadFile(path,
@@ -120,7 +101,7 @@ public class StorageController {
                         listener);
                 pass = true;
             } catch (Exception ignored) {
-                System.out.println("Файл не скачался. Пробую ещё раз");
+                //System.out.println("Файл не скачался. Пробую ещё раз");
                 Thread.sleep(500);
             }
         }
@@ -156,10 +137,8 @@ public class StorageController {
     public static void deleteFromYandexTrash() throws ServerIOException, IOException {
         String path;
         List<Resource> list = restClient.getTrashResources(build.build()).getResourceList().getItems();
-        System.out.println(list);
         for(Resource res : list) {
             path = res.getPath().getPath();
-            System.out.println(path);
             restClient.deleteFromTrash(path);
         }
     }
@@ -167,7 +146,7 @@ public class StorageController {
         try {
             restClient.delete(path, autoCleanUp);
         } catch (ServerIOException ignored) {
-            System.out.println("Не удалось удалить, видимо файла не существует");
+            //System.out.println("Не удалось удалить, видимо файла не существует");
         }
     }
     public static List<Resource> getDiskInfo() throws ServerIOException, IOException {
@@ -245,7 +224,6 @@ public class StorageController {
         File file = new File(mainPath + path);
         if(file.exists()) {
             if(file.isDirectory()) {
-                System.out.println("Это папка");
                 deleteDir(file);
             }
             file.delete();
@@ -288,27 +266,23 @@ public class StorageController {
             fullPath.append(dir);
             try {
                 restClient.makeFolder(fullPath.toString());
-                System.out.println(fullPath);
             } catch (Exception ignored) {
-                System.out.println("Возможно папка существует" + fullPath + " " + ignored);
+                //System.out.println("Возможно папка существует" + fullPath + " " + ignored);
             }
             fullPath.append("/");
         }
     }
 
     private static void uploadFile(String path) throws ServerException, IOException {
-        System.out.println(mainPath + path);
         String fullPath = mainPath + path;
         File tempFile = new File(fullPath);
 
 
         if(tempFile.isDirectory() && !List.of(tempFile.listFiles()).isEmpty()) {
-            System.out.println(tempFile.getPath());
 
             List<File> listOfFiles = List.of(tempFile.listFiles());
             List<File> files;
             List<File> dirs;
-            System.out.println(listOfFiles);
 
             String tempPath = tempFile.getPath().substring(mainPath.length());
             makeDirsOnYandex(tempPath);
@@ -316,14 +290,14 @@ public class StorageController {
             files = getFilesArray(listOfFiles);
             dirs = getDirsArray(listOfFiles);
             for(File file: files) {
-                System.out.println("Загрузка файла " + file.getPath());
+                //System.out.println("Загрузка файла " + file.getPath());
                 restClient.uploadFile(restClient.getUploadLink(file.getAbsolutePath().substring(mainPath.length()).replace("\\", "/"), true),
                 true,
                         file,
                         listener);
             }
             for(File dir: dirs) {
-                System.out.println("Dirs for " + dir.getPath());
+                //System.out.println("Dirs for " + dir.getPath());
                 uploadFile(dir.getAbsolutePath().substring(mainPath.length()));
             }
         } else {
@@ -332,40 +306,5 @@ public class StorageController {
                     tempFile,
                     listener);
         }
-//        if(!path.contains("\\") && tempFile.isDirectory() && tempFile.listFiles().length == 0) {
-//            restClient.makeFolder(path.replace("\\", "/"));
-//            return;
-//        }
-//        System.out.println(path);
-//        if(path.contains("\\")) {
-//            String newPath = path.substring(0, path.lastIndexOf("\\"));
-//            List<String> arr = List.of(newPath.split("\\\\"));
-//            StringBuilder fullPath = new StringBuilder();
-//            if (!arr.isEmpty()) {
-//                for (String elem : arr) {
-//                    fullPath.append(elem);
-//                    File file = new File(fullPath.toString());
-//                    System.out.println(file.exists() + " " + file.isDirectory());
-//                    try {
-//                        restClient.makeFolder(fullPath.toString());
-//                    } catch (ServerIOException ignored) {
-//                        System.out.println("Такая папка существует");
-//                    }
-//                    fullPath.append("/");
-//                }
-//            }
-//        }
-//        if(new File(mainPath + path).isDirectory()) {
-//            restClient.makeFolder(path.replace("\\", "/"));
-//            return;
-//        }
-//
-//        restClient.uploadFile(restClient.getUploadLink(path.replace("\\", "/"), true),
-//                true,
-//                new File(mainPath + path.substring(path.lastIndexOf("/") + 1)),
-//                listener);
-
     }
-
-
 }

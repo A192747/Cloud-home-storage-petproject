@@ -26,7 +26,6 @@ public class Supervisor implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("Supervisor is working");
             //запустили демона, который постоянно просматривает есть ли изменения на яндекс диске
             Thread daemon = new Thread(new Daemon());
             daemon.setDaemon(true);
@@ -34,14 +33,6 @@ public class Supervisor implements Runnable {
             while (true) {
                 synchronized (mutex) {
                     mutex.wait();
-                    System.out.println("Я сработал супервизор");
-                    StringBuilder str = new StringBuilder();
-//                    List<Resource> list = StorageController.getDiskInfo();
-//                    System.out.println(list);
-//                    for (int i = 0; i < list.size(); i++) {
-//                        str.append(i + 1).append(" ").append(list.get(i).getPath()).append("\n");
-//                    }
-
                     Bot.status = BotStatus.SAVE_QUESTION;
                     Vk.messages.send()
                             .setPeerId(Integer.parseInt(properties.getProperty("user_vk_id")))
@@ -50,10 +41,8 @@ public class Supervisor implements Runnable {
                             .setKeyboard(MyKeyboard.getKeyboard(Bot.status))
                             .execute();
                     synchronized (mutexWaitAnswer){
-                        System.out.println("Супервизор ждет");
                         mutexWaitAnswer.wait();
                     }
-                    System.out.println("Супервизор погнал");
                 }
 
             }

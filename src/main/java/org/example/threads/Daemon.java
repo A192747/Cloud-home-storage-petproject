@@ -15,27 +15,16 @@ public class Daemon implements Runnable{
     @Override
     public void run() {
         try {
-            System.out.println("Daemon is working");
-
-//            info = StorageController.getDiskInfo();
-//            StorageController.prev = info;
-//            StorageController.inTrash = StorageController.getInTrash();
             while(true){
                 synchronized (mutex) {
                     if (!StorageController.getDiskInfo().toString().equals(StorageController.info.toString())){
-                        System.out.println("Я сработал демон");
-                        System.out.println(StorageController.getDiskInfo());
-                        System.out.println(StorageController.info);
-                        System.out.println("*************************");
                         mutex.notify();
                     }
                 }
                 Thread.sleep(delay);
-
             }
-
         } catch (Exception e){
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 }
